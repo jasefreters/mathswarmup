@@ -23,7 +23,7 @@ All content lives in [`data.js`](data.js). Images go in `img/`. The comment at t
 1. Push this repository to GitHub.
 2. Go to **Settings → Pages**.
 3. Under **Source**, choose **Deploy from a branch**, then pick `main` and `/ (root)`.
-4. The site will be live at `https://<your-username>.github.io/warmup-hub/`.
+4. The site will be live at `https://jasefreters.github.io/mathswarmup/`.
 
 ## Credits
 
