@@ -371,6 +371,17 @@ body.notes .note { display: block; }
 .stack i { height: 34px; background: #8FD8F2; border: 2px solid #1D3D4F; margin-top: -2px; display: grid; place-items: center; font-style: normal; font-size: .6em; color: #1D3D4F; font-weight: 700; }
 .stack i:first-child { background: #5BC8EE; }
 
+/* tap the sides */
+.sd-pic svg { max-height: 50vh; }
+.board .sd-pic svg { max-height: 190px; }
+.sd { cursor: pointer; }
+.sd-hit { stroke: transparent; stroke-width: 28; stroke-linecap: round; }
+.sd-line { stroke: #17233F; stroke-width: 5; stroke-linecap: round; transition: stroke .15s ease, stroke-width .15s ease; }
+@media (hover: hover) { .sd:not(.on):hover .sd-line { stroke: #5A6885; } }
+.sd.on .sd-line { stroke: #1B8A55; stroke-width: 9; }
+.sd-lab { fill: #17233F; font-family: var(--f-body); font-weight: 700; font-size: 20px; pointer-events: none; }
+.board .sd { pointer-events: none; }
+
 /* tap-to-sort */
 .cl-cats { display: flex; flex-wrap: wrap; gap: 8px; }
 .cl-cat { display: inline-flex; align-items: center; gap: 8px; border: 2px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 8px 6px 10px; font-weight: 700; font-size: .82em; }

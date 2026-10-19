@@ -124,8 +124,12 @@ UNITS.push({
       {
         type: "sr", focus: "Geometric measure A: Length",
         prompt: "Find the total **perimeter** of this composite shape.",
-        img: "h-shape-perimeter.png",
-        interact: [{ kind: "input", fields: [{ label: "Perimeter", value: 128, suffix: "cm" }] }],
+        interact: [
+          { kind: "sides", label: "Yellow H-shaped composite shape", view: [400, 370],
+            poly: [[60,40], [156,40], [156,148], [216,148], [216,40], [312,40], [312,340], [216,340], [216,232], [156,232], [156,340], [60,340]],
+            labels: [{ x: 108, y: 28, t: "8 cm" }, { x: 264, y: 28, t: "8 cm" }, { x: 186, y: 100, t: "5 cm" }, { x: 324, y: 197, t: "25 cm", anchor: "start" }, { x: 186, y: 296, t: "9 cm" }] },
+          { kind: "input", fields: [{ label: "Perimeter", value: 128, suffix: "cm" }] }
+        ],
         answer: "**128 cm** (25 + 25 + 8 + 8 + 8 + 8 + 9 + 5 + 9 + 9 + 5 + 9)",
         explain: "This takes both gaps as 9 cm deep. Only the bottom gap is labelled."
       },

@@ -8,6 +8,7 @@ The teacher's rule: **each question is optimised for interactivity.** When addin
 
 1. **Make the picture the activity.** If students would count, sort, compare, measure or locate things in an image, redraw it as an interactive SVG instead of showing a static picture plus typed boxes.
    - Counting or sorting shapes and objects → `classify` (tap a category, then tap each shape; live tallies, optional `total` for fraction tallies).
+   - Perimeter or counting sides → `sides` (tap each side to turn it green). Never total the lengths; the teacher does that with the class.
    - Placing values → `numberline` (drag cards) or `marker` (slide a pin).
    - Ordering → `order`. Grouping or weighing → `balance`, `select`, `choose`.
    - Fractions of a whole → `shade` (strip) or `stack` (build a whole from a part).

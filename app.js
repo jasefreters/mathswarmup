@@ -480,6 +480,27 @@
       },
       check(el, p) { const n = el.querySelector("[data-stack]").children.length; return { ok: n === p.target, msg: n === p.target ? "6 sixths make one whole jug!" : n + " parts is " + (n < p.target ? "not enough" : "too many") + " for a whole." }; }
     },
+    // Tap each side of a shape to mark it as counted. Lengths are left for the class to add.
+    sides: {
+      html(p, pv) {
+        const pts = p.poly, n = pts.length;
+        let svg = "<svg viewBox='0 0 " + p.view[0] + " " + p.view[1] + "' role='img' aria-label='" + esc(p.label || "Shape with sides to tap") + "'>" +
+          "<polygon points='" + pts.map((q) => q.join(",")).join(" ") + "' fill='" + (p.fill || "#FFDF5D") + "'/>";
+        for (let i = 0; i < n; i++) {
+          const [a, b] = [pts[i], pts[(i + 1) % n]], seg = "x1='" + a[0] + "' y1='" + a[1] + "' x2='" + b[0] + "' y2='" + b[1] + "'";
+          svg += "<g class='sd' data-sd='" + i + "'><line " + seg + " class='sd-hit'/><line " + seg + " class='sd-line'/></g>";
+        }
+        svg += (p.labels || []).map((l) => "<text x='" + l.x + "' y='" + l.y + "' text-anchor='" + (l.anchor || "middle") + "' class='sd-lab'>" + esc(l.t) + "</text>").join("") + "</svg>";
+        return (pv ? "" : "<p class='ph'>Tap each side as you count it. It turns green.</p>") + "<div class='cl-pic sd-pic'>" + svg + "</div>" +
+          (pv ? "" : "<p class='readout' data-sdread>0 of " + n + " sides marked</p>");
+      },
+      init(el, p) {
+        const upd = () => { const k = el.querySelectorAll(".sd.on").length; el.querySelector("[data-sdread]").textContent = k + " of " + p.poly.length + " sides marked" + (k === p.poly.length ? " ✓ every side counted" : ""); };
+        el._upd = upd;
+        el.addEventListener("click", (e) => { const g = e.target.closest(".sd"); if (!g) return; g.classList.toggle("on"); upd(); });
+      },
+      reveal(el) { el.querySelectorAll(".sd").forEach((g) => g.classList.add("on")); el._upd(); }
+    },
     // Tap-to-sort: choose a category, then tap shapes in the picture to colour them.
     classify: {
       html(p, pv) {
@@ -604,7 +625,7 @@
     const k = (q.interact || []).map((p) => p.kind);
     if (k.includes("numberline") || k.includes("marker")) return [ICON.drag, "Drag"];
     if (k.includes("sketch")) return [ICON.draw, "Draw"];
-    if (k.some((x) => ["choose", "select", "order", "balance", "shade", "stack", "classify"].includes(x))) return [ICON.tap, "Tap"];
+    if (k.some((x) => ["choose", "select", "order", "balance", "shade", "stack", "classify", "sides"].includes(x))) return [ICON.tap, "Tap"];
     if (k.length) return [ICON.type, "Type"];
     return [ICON.talk, "Discuss"];
   }
