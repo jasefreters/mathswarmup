@@ -76,11 +76,25 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Two-dimensional spatial structure A: 2D shapes",
-        prompt: "**Identify** the number of each of these 2D shapes.",
-        img: "2d-shapes.png",
-        interact: [{ kind: "input", fields: [
-          { label: "isosceles triangles", value: 2 }, { label: "quadrilaterals", value: 10 },
-          { label: "equilateral triangles", value: 1 }, { label: "scalene triangles", value: 1 }] }],
+        prompt: "Identify the number of each of these 2D shapes.",
+        interact: [{ kind: "classify", label: "14 grey 2D shapes", view: [793, 568],
+          cats: [{ k: "iso", t: "isosceles triangles", c: "#2F6FE4" }, { k: "quad", t: "quadrilaterals", c: "#F2994A" }, { k: "equi", t: "equilateral triangles", c: "#22A06B" }, { k: "scal", t: "scalene triangles", c: "#D6408B" }],
+          shapes: [
+            { p: "28,93 157,8 213,91", a: "scal" },
+            { p: "259,33 365,8 365,160 259,160", a: "quad" },
+            { p: "406,132 451,43 541,43 586,132", a: "quad" },
+            { p: "632,104 706,30 779,104 706,178", a: "quad" },
+            { p: "12,231 48,123 164,141 181,231", a: "quad" },
+            { p: "220,298 289,183 429,183 360,298", a: "quad" },
+            { p: "432,272 530,170 633,268", a: "iso" },
+            { p: "650,290 714,226 779,293 714,397", a: "quad" },
+            { p: "22,378 131,250 201,309 93,437", a: "quad" },
+            { p: "232,373 430,320 430,423", a: "iso" },
+            { p: "496,304 616,304 616,423 496,423", a: "quad" },
+            { p: "46,500 148,431 256,491 154,561", a: "quad" },
+            { p: "296,460 471,460 471,555 296,555", a: "quad" },
+            { p: "594,534 666,408 738,534", a: "equi" }
+          ] }],
         answer: "Isosceles triangles: 2 · quadrilaterals: 10 · equilateral triangles: 1 · scalene triangles: 1",
         explain: "Counting the equilateral triangle separately (it is also isosceles)."
       }
@@ -299,11 +313,25 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Representing quantity fractions A",
-        prompt: "Write a **fraction number sentence** and solve:\nyellow circles + white squares + star",
-        img: "shapes-grid.png",
-        interact: [{ kind: "input", fields: [
-          { label: "yellow circles", value: 2/10 }, { label: "white squares", value: 4/10 },
-          { label: "star", value: 1/10 }, { label: "total", value: 7/10 }] }],
+        prompt: "Write a fraction number sentence and solve:\nyellow circles + white squares + star",
+        interact: [
+          { kind: "classify", label: "A grid of 10 squares", view: [424, 172], total: 10, mark: "outline", bg: "#8E949C",
+            hint: "Choose a group, then tap each square that belongs in it. The tally shows the fraction of the grid.",
+            cats: [{ k: "yc", t: "yellow circles", c: "#2F6FE4" }, { k: "ws", t: "white squares", c: "#F2994A" }, { k: "star", t: "star", c: "#D6408B" }],
+            shapes: [
+              {"p": "4,4 84,4 84,84 4,84", "fill": "#FFFFFF", "a": "star", "deco": "<polygon points='44,14 52,33 73,35 56,48 62,68 44,57 26,68 32,48 15,35 36,33' fill='#3C4048' style='pointer-events:none'/>"},
+              {"p": "88,4 168,4 168,84 88,84", "fill": "#111111"},
+              {"p": "172,4 252,4 252,84 172,84", "fill": "#FFFFFF", "a": "ws"},
+              {"p": "256,4 336,4 336,84 256,84", "fill": "#111111", "a": "yc", "deco": "<circle cx='296' cy='44' r='27' fill='#FFD43B' style='pointer-events:none'/>"},
+              {"p": "340,4 420,4 420,84 340,84", "fill": "#FFFFFF", "a": "ws"},
+              {"p": "4,88 84,88 84,168 4,168", "fill": "#111111"},
+              {"p": "88,88 168,88 168,168 88,168", "fill": "#FFFFFF", "a": "ws"},
+              {"p": "172,88 252,88 252,168 172,168", "fill": "#111111"},
+              {"p": "256,88 336,88 336,168 256,168", "fill": "#FFFFFF", "a": "ws"},
+              {"p": "340,88 420,88 420,168 340,168", "fill": "#111111", "a": "yc", "deco": "<circle cx='380' cy='128' r='27' fill='#FFD43B' style='pointer-events:none'/>"}
+            ] },
+          { kind: "input", fields: [{ label: "Fraction number sentence total", value: 7/10, placeholder: "e.g. 3/10" }] }
+        ],
         answer: "[2/10] + [4/10] + [1/10] = **[7/10]**",
         explain: "Counting only the white squares with nothing on them."
       },

@@ -480,6 +480,61 @@
       },
       check(el, p) { const n = el.querySelector("[data-stack]").children.length; return { ok: n === p.target, msg: n === p.target ? "6 sixths make one whole jug!" : n + " parts is " + (n < p.target ? "not enough" : "too many") + " for a whole." }; }
     },
+    // Tap-to-sort: choose a category, then tap shapes in the picture to colour them.
+    classify: {
+      html(p, pv) {
+        const shape = (s, i) => {
+          const fill = s.fill || "#A3A6AC", attrs = " data-s='" + i + "' fill='" + fill + "' class='cl-shape'";
+          let el = s.circle ? "<circle cx='" + s.circle[0] + "' cy='" + s.circle[1] + "' r='" + s.circle[2] + "'" + attrs + "/>" : "<polygon points='" + s.p + "'" + attrs + "/>";
+          return el + (s.deco || "");
+        };
+        const svg = "<div class='cl-pic'><svg viewBox='0 0 " + p.view[0] + " " + p.view[1] + "' role='img' aria-label='" + esc(p.label || "Shapes to sort") + "'>" +
+          (p.bg ? "<rect width='" + p.view[0] + "' height='" + p.view[1] + "' rx='6' fill='" + p.bg + "'/>" : "") + p.shapes.map(shape).join("") + "</svg></div>";
+        const cats = "<div class='cl-cats' role='group' aria-label='Categories'>" + p.cats.map((c, i) =>
+          "<button class='cl-cat' data-cat='" + i + "' aria-pressed='" + (i === 0 && !pv) + "' style='--k:" + c.c + "'" + (pv ? " disabled" : "") + "><i></i>" + fmt(c.t) + "<b data-tally='" + i + "'>" + (p.total ? fmt("[0/" + p.total + "]") : "0") + "</b></button>").join("") + "</div>";
+        return (pv ? "" : "<p class='ph'>" + esc(p.hint || "Choose a group, then tap each shape that belongs in it. Tap a shape again to take it out.") + "</p>") + cats + svg;
+      },
+      init(el, p) {
+        el._paint = {};
+        const upd = () => {
+          p.cats.forEach((c, i) => { const n = Object.values(el._paint).filter((v) => v === i).length; el.querySelector("[data-tally='" + i + "']").innerHTML = p.total ? fmt("[" + n + "/" + p.total + "]") : n; });
+          el.querySelectorAll(".cl-shape").forEach((s) => {
+            const v = el._paint[s.dataset.s], sh = p.shapes[+s.dataset.s];
+            s.classList.remove("ok", "no");
+            if (v == null) { s.setAttribute("fill", sh.fill || "#A3A6AC"); s.style.stroke = ""; }
+            else if (p.mark === "outline") { s.setAttribute("fill", sh.fill || "#A3A6AC"); s.style.stroke = p.cats[v].c; }
+            else { s.setAttribute("fill", p.cats[v].c); s.style.stroke = ""; }
+            s.classList.toggle("painted", v != null);
+          });
+        };
+        el._upd = upd;
+        el.addEventListener("click", (e) => {
+          const cat = e.target.closest(".cl-cat");
+          if (cat) { el.querySelectorAll(".cl-cat").forEach((b) => b.setAttribute("aria-pressed", b === cat)); return; }
+          const s = e.target.closest(".cl-shape"); if (!s) return;
+          const cur = +el.querySelector(".cl-cat[aria-pressed='true']").dataset.cat, k = s.dataset.s;
+          el._paint[k] === cur ? delete el._paint[k] : (el._paint[k] = cur);
+          upd();
+        });
+      },
+      check(el, p) {
+        if (!Object.keys(el._paint).length) return { ok: null, msg: "Tap the shapes to sort them first." };
+        let all = true;
+        el._upd();
+        el.querySelectorAll(".cl-shape").forEach((s) => {
+          const want = p.shapes[+s.dataset.s].a, got = el._paint[s.dataset.s];
+          const ok = want == null ? got == null : got === p.cats.findIndex((c) => c.k === want);
+          if (!ok) all = false;
+          if (got != null || want != null) s.classList.add(ok ? "ok" : "no");
+        });
+        return { ok: all, msg: all ? null : "The shapes with a red dashed outline need another look." };
+      },
+      reveal(el, p) {
+        el._paint = {};
+        p.shapes.forEach((s, i) => { if (s.a != null) el._paint[i] = p.cats.findIndex((c) => c.k === s.a); });
+        el._upd();
+      }
+    },
     sketch: {
       html(p, pv) { return pv ? "" : "<div class='sketch' data-sketch><canvas></canvas></div><div class='checkrow'><button class='btn' data-clear>Clear drawing</button></div>"; },
       init(el, p) {
@@ -549,7 +604,7 @@
     const k = (q.interact || []).map((p) => p.kind);
     if (k.includes("numberline") || k.includes("marker")) return [ICON.drag, "Drag"];
     if (k.includes("sketch")) return [ICON.draw, "Draw"];
-    if (k.some((x) => ["choose", "select", "order", "balance", "shade", "stack"].includes(x))) return [ICON.tap, "Tap"];
+    if (k.some((x) => ["choose", "select", "order", "balance", "shade", "stack", "classify"].includes(x))) return [ICON.tap, "Tap"];
     if (k.length) return [ICON.type, "Type"];
     return [ICON.talk, "Discuss"];
   }

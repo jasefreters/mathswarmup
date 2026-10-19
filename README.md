@@ -24,6 +24,7 @@ To change which scope-and-sequence year a class follows, edit [`config.js`](conf
   - drag fractions onto a number line, or slide a marker to a decimal
   - type answers (whole numbers, decimals, fractions like `3/4` or `1 1/2`, money and times)
   - tap to choose, select, put things in order or balance parcels on a scale
+  - sort the shapes in a picture by tapping them (pick a group, tap each shape; the tallies count up)
   - shade a fraction strip, build a whole from a part, or draw
   - press **Check** to see what's right; anything wrong turns red
 - **Done:** when the class gets a question right, its card on the board celebrates with confetti and stays green with a ✓ Done badge. Discussion and drawing questions count as done once the answer is shown. Ticks last for the day; **Clear ticks** resets the board.
@@ -40,7 +41,7 @@ To change which scope-and-sequence year a class follows, edit [`config.js`](conf
 2. Put its images in a folder under `img/` and set `img` to that folder.
 3. Add a `<script src="units/your-file.js"></script>` line in `index.html` next to the others.
 
-Each question has a `type`: `mc`, `tf` or `sr`. A short response becomes interactive with an `interact` list. The part kinds are `input`, `fractions`, `sum6`, `pair`, `choose`, `select`, `order`, `numberline`, `marker`, `balance`, `shade`, `stack` and `sketch`; the existing units show each one in use. Text can use `**bold**`, `[3/4]` for a fraction and `1[2/4]` for a mixed number.
+Every question should be hands-on. See [`CLAUDE.md`](CLAUDE.md) for which activity to use. Each question has a `type`: `mc`, `tf` or `sr`. A short response becomes interactive with an `interact` list. The part kinds are `input`, `fractions`, `sum6`, `pair`, `choose`, `select`, `order`, `numberline`, `marker`, `balance`, `classify`, `shade`, `stack` and `sketch`; the existing units show each one in use. Text can use `**bold**`, `[3/4]` for a fraction and `1[2/4]` for a mixed number.
 
 ## Credits
 

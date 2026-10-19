@@ -371,6 +371,20 @@ body.notes .note { display: block; }
 .stack i { height: 34px; background: #8FD8F2; border: 2px solid #1D3D4F; margin-top: -2px; display: grid; place-items: center; font-style: normal; font-size: .6em; color: #1D3D4F; font-weight: 700; }
 .stack i:first-child { background: #5BC8EE; }
 
+/* tap-to-sort */
+.cl-cats { display: flex; flex-wrap: wrap; gap: 8px; }
+.cl-cat { display: inline-flex; align-items: center; gap: 8px; border: 2px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 8px 6px 10px; font-weight: 700; font-size: .82em; }
+.cl-cat i { width: 1em; height: 1em; border-radius: 4px; background: var(--k); flex: none; }
+.cl-cat b { min-width: 1.7em; text-align: center; background: var(--sunk); border-radius: 999px; padding: 1px 8px; font-variant-numeric: tabular-nums; }
+.cl-cat[aria-pressed="true"] { border-color: var(--k); box-shadow: inset 0 0 0 1px var(--k); }
+.cl-pic { background: var(--img-bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.cl-pic svg { display: block; width: 100%; max-height: 52vh; }
+.board .cl-pic svg { max-height: 190px; }
+.cl-shape { cursor: pointer; stroke: transparent; stroke-width: 6; stroke-linejoin: round; paint-order: stroke; transition: fill .15s ease; }
+.cl-shape:hover { opacity: .85; }
+.cl-shape.ok { stroke: #1B8A55 !important; }
+.cl-shape.no { stroke: #C4372C !important; stroke-dasharray: 10 6; }
+
 /* sketch */
 .sketch { position: relative; width: 100%; height: 360px; border: 2px solid var(--line); border-radius: 12px; background: var(--card); overflow: hidden; touch-action: none; }
 .sketch canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
