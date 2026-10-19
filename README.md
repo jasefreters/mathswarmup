@@ -1,30 +1,45 @@
-# Warm-Up Hub
+# The Daily Dash
 
-A classroom warm-up board for **Stage 3 Mathematics**, built from my scope and sequence. Put it on the projector, pick the week and day, and run the warm-up.
+Daily maths warm-ups for **Years 3–6**, filed by the NSW sample scope and sequence. Put it on the projector, pick the year, term, fortnight and day, and run the warm-up.
 
-**Term 4, Weeks 1–2** (Unit 16 review of learning) is loaded so far.
+**Live site:** https://jasefreters.github.io/mathswarmup/
 
-## What it does
+## What's loaded
 
-- **Daily board:** five quick questions (multiple choice / true or false + short response) and a number sense activity on one screen.
-- **Spotlight:** click any question to show it full screen. Use ← → to move between questions and `Esc` to go back.
+| Year | Follows | Loaded |
+| --- | --- | --- |
+| Year 3 | Stage 2 – Year A | — |
+| Year 4 | Stage 2 – Year B | Term 4, Weeks 1–2 (Unit 36) |
+| Year 5 | Stage 3 – Year A | Term 4, Weeks 1–2 (Unit 16) |
+| Year 6 | Stage 3 – Year B | — |
+
+Each unit is a 2-week learning sequence with 8 reviews: Monday to Thursday of each week. A fortnight with no warm-ups yet shows which unit the scope and sequence has there.
+
+To change which scope-and-sequence year a class follows, edit [`config.js`](config.js).
+
+## How it works in class
+
+- **Board:** five quick questions on one screen. Each card shows how students answer it: Tap, Type, Drag, Draw or Discuss.
+- **Question view:** click a card to open it full screen and do the activity:
+  - drag fractions onto a number line, or slide a marker to a decimal
+  - type answers (whole numbers, decimals, fractions like `3/4` or `1 1/2`, money and times)
+  - tap to choose, select, put things in order or balance parcels on a scale
+  - shade a fraction strip, build a whole from a part, or draw
+  - press **Check** to see what's right; anything wrong turns red
+- **Show answer** reveals the answer. On number lines it also moves the cards to the right places.
+- **Answers** in the top bar reveals every answer on the board. The keyboard shortcut is `A`.
 - **Timer:** 3, 5 or 10 minutes.
-- **Answers:** press **Answers** (or `A`) to reveal every answer. In spotlight, `A` reveals just that question.
-- **Click to check:** tap a multiple-choice or true/false option to mark it right or wrong.
-- **Notes:** shows the syllabus focus area for each question.
-- **Mix it up:** builds a random review from every lesson up to the selected day (spaced practice).
+- **Notes** shows each question's syllabus focus area.
+- **Mix it up** builds a random review from every lesson up to the selected day.
 
-## Adding or editing warm-ups
+## Adding a unit
 
-All content lives in [`data.js`](data.js). Images go in `img/`. The comment at the top of `data.js` explains the format. To add a new week, copy a week block and change the questions.
+1. Copy a file in [`units/`](units), for example `units/s2b-unit36.js`, and set `stage`, `ab`, `term`, `ls` (learning sequence 1–5) and `unit`.
+2. Put its images in a folder under `img/` and set `img` to that folder.
+3. Add a `<script src="units/your-file.js"></script>` line in `index.html` next to the others.
 
-## Hosting on GitHub Pages
-
-1. Push this repository to GitHub.
-2. Go to **Settings → Pages**.
-3. Under **Source**, choose **Deploy from a branch**, then pick `main` and `/ (root)`.
-4. The site will be live at `https://jasefreters.github.io/mathswarmup/`.
+Each question has a `type`: `mc`, `tf` or `sr`. A short response becomes interactive with an `interact` list. The part kinds are `input`, `fractions`, `sum6`, `pair`, `choose`, `select`, `order`, `numberline`, `marker`, `balance`, `shade`, `stack` and `sketch`; the existing units show each one in use. Text can use `**bold**`, `[3/4]` for a fraction and `1[2/4]` for a mixed number.
 
 ## Credits
 
-Questions adapted from NSW Department of Education, *Mathematics Stage 3 Year A Unit 16 – Review of learning*. © State of New South Wales (Department of Education), 2025, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Questions adapted from the NSW Department of Education *Mathematics Stage 2 Year B Unit 36* and *Stage 3 Year A Unit 16 – Review of learning* resources, and from the Stage 2 and Stage 3 sample scope and sequences. © State of New South Wales (Department of Education), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
