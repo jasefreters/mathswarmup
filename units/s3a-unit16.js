@@ -31,13 +31,15 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Geometric measure A: Length",
-        prompt: "Jesse swam 400 m on Monday, 500 m on Tuesday, 300 m on Wednesday, 600 m on Thursday and 200 m on Friday.\n**Record the distance** Jesse swam using the abbreviation for **kilometres**.",
+        prompt: "Jesse swam 400 m on Monday, 500 m on Tuesday, 300 m on Wednesday, 600 m on Thursday and 200 m on Friday.\nRecord the distance Jesse swam using the abbreviation for kilometres.",
+        cubes: {"q": "Record the distance Jesse swam using the abbreviation for kilometres.", "key": ["distance", "kilometres"], "ops": ["+"], "also": ["÷"], "solve": [{"t": "Make friendly pairs", "s": "400 + 600 = 1000 and 500 + 300 + 200 = 1000. 1000 + 1000 = 2000 m."}, {"t": "Add the hundreds", "s": "4 + 5 + 3 + 6 + 2 = 20 hundreds = 2000 m. Then 1000 m = 1 km, so 2000 m = 2 km."}]},
         interact: [{ kind: "input", fields: [{ label: "Total", value: 2, suffix: "km" }] }],
         answer: "400 + 500 + 300 + 600 + 200 = 2000 m = **2 km**"
       },
       {
         type: "sr", focus: "Non-spatial measure A: Time",
-        prompt: "Sophie needs to catch the bus to the oval at 3:30 pm and then the 5:45 pm bus home.\n**Record** the times in **24-hour time**.",
+        prompt: "Sophie needs to catch the bus to the oval at 3:30 pm and then the 5:45 pm bus home.\nRecord the times in 24-hour time.",
+        cubes: {"q": "Record the times in 24-hour time.", "key": ["24-hour time"], "ops": ["+"], "solve": [{"t": "Add 12 to the pm hours", "s": "3:30 pm → 3 + 12 = 15, so 1530. 5:45 pm → 5 + 12 = 17, so 1745."}, {"t": "Count on from midday", "s": "Midday is 1200. 3 hours 30 minutes later is 1530. 5 hours 45 minutes later is 1745."}]},
         interact: [{ kind: "input", fields: [{ label: "3:30 pm", accept: ["1530"] }, { label: "5:45 pm", accept: ["1745"] }] }],
         answer: "**1530** and **1745**"
       }
@@ -67,7 +69,8 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Geometric measure A: Length",
-        prompt: "Elias trained for the long jump. His jumps measured 1.54 m, 1.43 m and 1.32 m.\n**Estimate** the total distance.",
+        prompt: "Elias trained for the long jump. His jumps measured 1.54 m, 1.43 m and 1.32 m.\nEstimate the total distance.",
+        cubes: {"q": "Estimate the total distance.", "key": ["Estimate", "total"], "ops": ["+"], "solve": [{"t": "Round to one decimal place", "s": "1.5 + 1.4 + 1.3 = 4.2 m. The real total is a little more, so about 4.3 m."}, {"t": "Round to the nearest half metre", "s": "1.5 + 1.5 + 1.5 = 4.5 m. Two jumps were rounded up, so the total is a bit under 4.5 m."}]},
         interact: [{ kind: "input", fields: [{ label: "About", min: 4.1, max: 4.5, suffix: "m" }] }],
         answer: "About **4.3 m** (1.5 + 1.4 + 1.3 ≈ 4.2 m; the exact total is 4.29 m)"
       },
@@ -148,13 +151,15 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Geometric measure A: Length",
-        prompt: "Pop's garden needs 60 m of fencing. What could be the **length and width** of the garden?",
+        prompt: "Pop's garden needs 60 m of fencing. What could be the length and width of the garden?",
+        cubes: {"q": "What could be the length and width of the garden?", "key": ["fencing", "length and width"], "ops": ["÷"], "also": ["+", "−"], "solve": [{"t": "Halve the fencing", "s": "One length and one width use half the fence: 60 ÷ 2 = 30 m. Choose two numbers that add to 30, like 20 m and 10 m."}, {"t": "Guess and check", "s": "Try 15 m by 15 m: 15 + 15 + 15 + 15 = 60 m. It works!"}]},
         interact: [{ kind: "pair", labels: ["Length", "Width"], unit: "m", rule: "perimeter", target: 60 }],
         answer: "Length + width must equal 30 m. For example 20 m × 10 m, 15 m × 15 m or 25 m × 5 m."
       },
       {
         type: "sr", focus: "Two-dimensional spatial structure A: Area",
         prompt: "The playground needs new turf. It is 28 m long and 7 m wide. Mr Bancroft estimates 200 square metres of turf is needed. Is this enough?",
+        cubes: {"q": "Is this enough?", "key": ["square metres", "long", "wide", "enough"], "ops": ["×"], "solve": [{"t": "Split the length", "s": "28 × 7 = 20 × 7 + 8 × 7 = 140 + 56 = 196 m²."}, {"t": "Round and adjust", "s": "30 × 7 = 210. Take away 2 × 7 = 14: 210 − 14 = 196 m². 196 is less than 200, so it's enough."}]},
         interact: [
           { kind: "input", fields: [{ label: "Area of the playground", value: 196, suffix: "m²" }] },
           { kind: "choose", rows: [{ t: "Is 200 m² enough?", options: ["Yes", "No"], a: 0 }] }
@@ -173,7 +178,8 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Represents numbers B",
-        prompt: "Sarah wants new athletic shoes that cost $200. There is a **25% discount**. How much will Sarah pay?",
+        prompt: "Sarah wants new athletic shoes that cost $200. There is a 25% discount. How much will Sarah pay?",
+        cubes: {"q": "How much will Sarah pay?", "key": ["25% discount", "pay"], "ops": ["÷", "−"], "also": ["×"], "solve": [{"t": "Find a quarter", "s": "25% = [1/4]. $200 ÷ 4 = $50 off. $200 − $50 = $150."}, {"t": "Find what she pays", "s": "She pays 75%, which is [3/4]. [1/4] of $200 is $50, so [3/4] is 3 × $50 = $150."}]},
         interact: [{ kind: "input", fields: [{ prefix: "$", value: 150 }] }],
         answer: "25% of $200 = $50, so Sarah pays **$150**"
       },
@@ -217,7 +223,8 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Representing quantity fractions A",
-        prompt: "Three gardeners have one open bag of potting mix each. One is [4/5] full, another is [2/5] full and the other is [3/5] full. How much potting mix do they have **altogether**?",
+        prompt: "Three gardeners have one open bag of potting mix each. One is [4/5] full, another is [2/5] full and the other is [3/5] full. How much potting mix do they have altogether?",
+        cubes: {"q": "How much potting mix do they have altogether?", "key": ["altogether"], "ops": ["+"], "solve": [{"t": "Add the fifths", "s": "4 fifths + 2 fifths + 3 fifths = 9 fifths = [9/5] = 1[4/5]."}, {"t": "Make a whole", "s": "Take [1/5] from the [2/5] bag to fill the [4/5] bag: 1 whole. [1/5] + [3/5] = [4/5] is left. Total 1[4/5] bags."}]},
         interact: [{ kind: "input", fields: [{ value: 9/5, suffix: "bags", placeholder: "e.g. 1 1/2" }] }],
         answer: "[4/5] + [2/5] + [3/5] = [9/5] = **1[4/5] bags**"
       },
@@ -236,7 +243,8 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Three-dimensional spatial structure A",
-        prompt: "Mrs Leaver needs 1 litre of water, 550 mL of orange juice and 250 mL of milk for a class picnic. How many litres is that? Use **decimal notation**.",
+        prompt: "Mrs Leaver needs 1 litre of water, 550 mL of orange juice and 250 mL of milk for a class picnic. How many litres is that? Use decimal notation.",
+        cubes: {"q": "How many litres is that?", "key": ["litres", "decimal notation"], "ops": ["+"], "solve": [{"t": "Use millilitres first", "s": "1000 mL + 550 mL + 250 mL = 1800 mL = 1.8 L."}, {"t": "Use decimals", "s": "550 mL = 0.55 L and 250 mL = 0.25 L. 1 + 0.55 + 0.25 = 1.8 L."}]},
         interact: [{ kind: "input", fields: [{ value: 1.8, suffix: "L" }] }],
         answer: "1 + 0.55 + 0.25 = **1.8 L**"
       }
@@ -253,7 +261,8 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Representing quantity fractions A",
-        prompt: "On a road trip a family listens to **10%** of an audio book on day 1 and **one quarter** ([1/4]) on day 2. How much of the book is left?",
+        prompt: "On a road trip a family listens to 10% of an audio book on day 1 and one quarter ([1/4]) on day 2. How much of the book is left?",
+        cubes: {"q": "How much of the book is left?", "key": ["left"], "ops": ["−"], "also": ["+"], "solve": [{"t": "Use percentages", "s": "[1/4] = 25%. 10% + 25% = 35% listened to. 100% − 35% = 65% left."}, {"t": "Draw a bar model", "s": "Split a bar into 20 parts (5% each). 10% is 2 parts and [1/4] is 5 parts. 7 parts are used, so 13 parts are left: [13/20] = 65%."}]},
         interact: [{ kind: "input", fields: [{ value: 65, suffix: "%" }] }],
         answer: "100% − 10% − 25% = **65%** (or [13/20]) left"
       },
@@ -300,7 +309,8 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "**Estimate** the total distance.",
+        prompt: "Estimate the total distance.",
+        cubes: {"q": "Estimate the total distance.", "key": ["Estimate", "total"], "ops": ["+"], "solve": [{"t": "Round to the nearest 10", "s": "200 + 560 + 250 + 180 + 260 = 1450 km."}, {"t": "Round to the nearest 100", "s": "200 + 600 + 200 + 200 + 300 = 1500 km. Quicker, but a rougher estimate."}]},
         list: [
           "Broken Hill, Wilyakali Country to Wilcannia, Barkindji Country: 197 km",
           "Wilcannia to Dubbo, Wiradjuri Country: 557 km",
@@ -322,7 +332,8 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Non-spatial measure A: Time",
-        prompt: "Grandma wants to watch **Beyond the news**, **Crime scene** and **Extreme sports update**. Can she watch all of them?",
+        prompt: "Grandma wants to watch Beyond the news, Crime scene and Extreme sports update. Can she watch all of them?",
+        cubes: {"q": "Can she watch all of them?", "key": ["all"], "ops": [], "note": "No calculation is needed. Compare when each show starts and finishes.", "solve": [{"t": "Use 24-hour time for everything", "s": "Beyond the news 1931–2000. Crime scene 8:30 pm–10:59 pm = 2030–2259. Extreme sports update starts at 2328."}, {"t": "Check for overlaps", "s": "Beyond the news ends before Crime scene starts, and Crime scene ends before 2328. Nothing overlaps, so yes!"}]},
         visual: { kind: "tvGuide" },
         interact: [{ kind: "choose", rows: [{ t: "Can she watch all three?", options: ["Yes", "No"], a: 0 }] }],
         answer: "Yes. Beyond the news 1931–2000 (Channel 4), Crime scene 2030–2259 (3HD), Extreme sports update from 2328 (Channel 4). None of them overlap."

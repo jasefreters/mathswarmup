@@ -15,6 +15,78 @@
       .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
       .replace(/\n/g, "<br>");
   }
+  // ---------- CUBES word-problem strategy ----------
+  // Wraps the numbers (circle), the question sentence (underline) and key words (box) in marks that
+  // stay invisible until the teacher turns each step on.
+  const NUM_RE = /\d{1,2}:\d{2}\s?(?:am|pm)?|\$?\d+(?:[ ,]\d{3})*(?:\.\d+)?(?:\[\d+\/\d+\])?(?:\s?(?:square metres?|kilometres?|centimetres?|millilitres?|metres?|kilograms?|grams?|litres?|minutes?|hours?|km|cm|mm|mL|kg|pm|am|m|g|L|%))?(?![A-Za-z\d-])|\[\d+\/\d+\]/g;
+  const MARK_OPEN = { c: "\u0011", u: "\u0012", b: "\u0013" }, MARK_CLOSE = "\u0010";
+  function markText(raw, c) {
+    const ranges = [];
+    const overlaps = (s, e) => ranges.some((r) => s < r.e && e > r.s && !(s >= r.s && e <= r.e) && !(s <= r.s && e >= r.e));
+    const qi = raw.indexOf(c.q);
+    if (qi >= 0) ranges.push({ s: qi, e: qi + c.q.length, t: "u" });
+    (c.key || []).forEach((k) => {
+      const m = new RegExp("(^|[^A-Za-z])(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")(?![A-Za-z])", "i").exec(raw);
+      if (m) { const s = m.index + m[1].length, e = s + m[2].length; if (!overlaps(s, e)) ranges.push({ s, e, t: "b" }); }
+    });
+    for (const m of raw.matchAll(NUM_RE)) {
+      const s = m.index, e = s + m[0].trimEnd().length;
+      if (/(week|day) $/i.test(raw.slice(Math.max(0, s - 5), s))) continue; // labels like "week 1" are not data
+      if (!overlaps(s, e)) ranges.push({ s, e, t: "c" });
+    }
+    let out = "";
+    for (let i = 0; i <= raw.length; i++) {
+      ranges.filter((r) => r.e === i).sort((a, b) => b.s - a.s).forEach(() => (out += MARK_CLOSE));
+      ranges.filter((r) => r.s === i).sort((a, b) => b.e - a.e).forEach((r) => (out += MARK_OPEN[r.t]));
+      if (i < raw.length) out += raw[i];
+    }
+    return fmt(out).replace(/\u0011/g, "<span class='cu cu-c'>").replace(/\u0012/g, "<span class='cu cu-u'>").replace(/\u0013/g, "<span class='cu cu-b'>").replace(/\u0010/g, "</span>");
+  }
+  const CUBE_STEPS = [
+    ["c", "C", "Circle", "the numbers.", "What do I know about each number? What are the units?"],
+    ["u", "U", "Underline", "the question.", "What am I being asked to solve?"],
+    ["b", "B", "Box", "the key words.", "Am I going to add, subtract, multiply or divide?"],
+    ["e", "E", "Evaluate", "and draw.", "Which operation do I need? What information don't I need? Draw it if that helps."],
+    ["s", "S", "Solve", "and check.", "Show your working, step by step. Does the answer make sense? How can I double-check?"]
+  ];
+  const OPS = [["+", "add"], ["−", "subtract"], ["×", "multiply"], ["÷", "divide"]];
+  function cubesHTML(q) {
+    const c = q.cubes;
+    let h = "<div class='cubes' data-cubes><div class='cubes-bar' role='group' aria-label='CUBES strategy'>" +
+      CUBE_STEPS.map(([k, L, name]) => "<button class='cube cube-" + k + "' data-cube='" + k + "' aria-pressed='false'><b>" + L + "</b>" + name + "</button>").join("") + "</div>";
+    CUBE_STEPS.forEach(([k, , name, rest, ask]) => {
+      h += "<div class='cube-panel cube-" + k + "' data-panel='" + k + "' hidden><p class='cube-say'><b>" + name + "</b> " + rest + " <span>" + ask + "</span></p>";
+      if (k === "e") {
+        h += c.ops.length
+          ? "<div class='ops' role='group' aria-label='Choose the operation'>" + OPS.map(([s, n]) => "<button class='op' data-op='" + s + "' aria-label='" + n + "'>" + s + "</button>").join("") + "</div><p class='feedback' data-opfb aria-live='polite'></p>"
+          : "<p class='cube-note'>" + fmt(c.note || "No calculation is needed for this one.") + "</p>";
+      }
+      if (k === "s") h += "<ol class='ways'>" + c.solve.map((w) => "<li><b>" + fmt(w.t) + "</b><span>" + fmt(w.s) + "</span></li>").join("") + "</ol>";
+      h += "</div>";
+    });
+    return h + "</div>";
+  }
+  function onCube(b) {
+    const k = b.dataset.cube, box = b.closest("[data-cubes]"), tile = b.closest(".tile");
+    const on = b.getAttribute("aria-pressed") !== "true";
+    b.setAttribute("aria-pressed", on);
+    if ("cub".includes(k)) tile.classList.toggle("show-" + k, on);
+    box.querySelectorAll("[data-panel]").forEach((p) => (p.hidden = !(on && p.dataset.panel === k)));
+  }
+  function onOp(b) {
+    const c = items()[state.spot].q.cubes, op = b.dataset.op, box = b.closest("[data-panel]"), fb = box.querySelector("[data-opfb]");
+    const good = c.ops.includes(op) || (c.also || []).includes(op);
+    b.classList.remove("ok", "no"); b.classList.add(good ? "ok" : "no");
+    const picked = [...box.querySelectorAll(".op.ok")].map((x) => x.dataset.op);
+    const name = (s) => OPS.find((o) => o[0] === s)[1];
+    if (!good) { fb.className = "feedback no"; fb.textContent = "Not this time. Look at the boxed key words again."; return; }
+    if (c.ops.every((o) => picked.includes(o))) {
+      fb.className = "feedback ok";
+      fb.textContent = "✓ Yes! " + (c.ops.length > 1 ? "This takes " + c.ops.length + " steps: " + c.ops.map(name).join(", then ") + "." : "We need to " + name(c.ops[0]) + ".") +
+        ((c.also || []).length && !c.ops.includes(op) ? " (" + name(op) + " can work too.)" : "");
+    } else { fb.className = "feedback ok"; fb.textContent = c.ops.includes(op) ? "Good! Is there another step?" : name(op) + " can work, but there's a more direct way. Try another."; }
+  }
+
   function parseNum(raw) {
     let s = String(raw).toLowerCase().replace(/[$,%]/g, "").trim();
     s = s.replace(/\s*[a-zµ²³]+\.?$/i, "").trim();
@@ -462,9 +534,10 @@
     const [icon, label] = hintFor(q);
     let h = "<div class='tile-head'><span class='num'>" + (i + 1) + "</span><span class='chip'>" + TYPE[q.type] + "</span>" +
       (it.from ? "<span class='hint'>" + esc(it.from) + "</span>" : "<span class='hint'>" + icon + label + "</span>") + "</div><div class='q'>";
-    h += "<p class='prompt'>" + fmt(q.prompt) + "</p>";
+    const txt = (s) => (q.cubes ? markText(s, q.cubes) : fmt(s));
+    h += "<p class='prompt'>" + txt(q.prompt) + "</p>";
     if (q.display) h += "<div class='display'>" + fmt(q.display) + "</div>";
-    if (q.list) h += "<ul class='list'>" + q.list.map((x) => "<li>" + fmt(x) + "</li>").join("") + "</ul>";
+    if (q.list) h += "<ul class='list'>" + q.list.map((x) => "<li>" + txt(x) + "</li>").join("") + "</ul>";
     if (q.visual) h += VIS[q.visual.kind](q.visual);
     if (q.img) h += "<figure class='pic'><img src='" + u.img + q.img + "' alt=''></figure>";
     if (q.type === "mc") {
@@ -481,6 +554,7 @@
       if (pv.length) h += pv.map((x) => "<div class='part'>" + x + "</div>").join("");
     }
     h += "</div>";
+    if (spot && q.cubes) h += cubesHTML(q);
     if (spot) h += actHTML(q);
     h += answerHTML(q);
     if (q.focus) h += "<div class='note'><span class='lbl'>Syllabus focus</span>" + esc(q.focus) + "</div>";
@@ -646,6 +720,8 @@
       if (ok) markDone();
       return;
     }
+    if ((b = t.closest("#spotBody [data-cube]"))) { onCube(b); return; }
+    if ((b = t.closest("#spotBody [data-op]"))) { onOp(b); return; }
     if (t.closest("#spotBody [data-check]")) { runCheck(); return; }
     if (t.closest("#spotBody [data-reset]")) { renderSpot(); return; }
   });

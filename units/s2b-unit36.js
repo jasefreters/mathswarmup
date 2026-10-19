@@ -24,19 +24,22 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "Alex has 127 cows and 465 sheep on his farm. How many animals does he have **altogether**?",
+        prompt: "Alex has 127 cows and 465 sheep on his farm. How many animals does he have altogether?",
+        cubes: {"q": "How many animals does he have altogether?", "key": ["altogether"], "ops": ["+"], "solve": [{"t": "Split into place values", "s": "100 + 400 = 500, 20 + 60 = 80, 7 + 5 = 12. 500 + 80 + 12 = 592."}, {"t": "Jump on a number line", "s": "Start at 465. Jump 100 → 565, jump 20 → 585, jump 7 → 592."}]},
         interact: [{ kind: "input", fields: [{ value: 592, suffix: "animals" }] }],
         answer: "127 + 465 = **592** animals"
       },
       {
         type: "sr", focus: "Geometric measure B: Length",
-        prompt: "Julie wants to build a new, stronger fence around her property for her new puppy. What **unit of measurement** would she use to measure the fence?",
+        prompt: "Julie wants to build a new, stronger fence around her property for her new puppy. What unit of measurement would she use to measure the fence?",
+        cubes: {"q": "What unit of measurement would she use to measure the fence?", "key": ["unit of measurement", "property"], "ops": [], "note": "No calculation is needed. Think about how long a fence around a property is.", "solve": [{"t": "Picture the length", "s": "A fence around a yard is many big steps long. One big step is about 1 metre, so metres make sense."}, {"t": "Rule out the others", "s": "Millimetres and centimetres are for small things like pencils. Kilometres are for long trips. So: metres."}]},
         interact: [{ kind: "choose", rows: [{ t: "Best unit", options: ["millimetres", "centimetres", "metres", "kilometres"], a: 2 }] }],
         answer: "**Metres** — a fence around a property is many metres long."
       },
       {
         type: "sr", focus: "Non-spatial measure B: Time",
-        prompt: "How much time is left until the **next hour**?",
+        prompt: "How much time is left until the next hour?",
+        cubes: {"q": "How much time is left until the next hour?", "key": ["next hour"], "ops": ["−"], "also": ["+"], "solve": [{"t": "Count on", "s": "From 7:45 count on by fives: 7:50, 7:55, 8:00. That's 15 minutes."}, {"t": "Subtract from 60", "s": "An hour has 60 minutes. 60 − 45 = 15 minutes."}]},
         visual: { kind: "digital", time: "07:45" },
         interact: [{ kind: "input", fields: [{ value: 15, suffix: "minutes" }] }],
         answer: "**15 minutes** (7:45 → 8:00)"
@@ -60,13 +63,15 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "George had 465 sheep, but during a storm 167 escaped. How many **remain** on the farm?",
+        prompt: "George had 465 sheep, but during a storm 167 escaped. How many remain on the farm?",
+        cubes: {"q": "How many remain on the farm?", "key": ["escaped", "remain"], "ops": ["−"], "solve": [{"t": "Constant difference", "s": "Add 3 to both numbers: 468 − 170 = 298."}, {"t": "Count up", "s": "From 167: +3 → 170, +30 → 200, +265 → 465. 3 + 30 + 265 = 298."}]},
         interact: [{ kind: "input", fields: [{ value: 298, suffix: "sheep" }] }],
         answer: "465 − 167 = **298** sheep"
       },
       {
         type: "sr", focus: "Geometric measure B: Length",
-        prompt: "Courtenay's desk is 150 centimetres long. **Convert** the length to metres.",
+        prompt: "Courtenay's desk is 150 centimetres long. Convert the length to metres.",
+        cubes: {"q": "Convert the length to metres.", "key": ["Convert", "centimetres", "metres"], "ops": ["÷"], "solve": [{"t": "Use 100 cm = 1 m", "s": "150 cm = 100 cm + 50 cm = 1 m 50 cm = 1.5 m."}, {"t": "Divide by 100", "s": "150 ÷ 100 = 1.5 m."}]},
         interact: [{ kind: "input", fields: [{ label: "150 cm =", value: 1.5, suffix: "m" }] }],
         answer: "**1.5 m** (100 cm = 1 m, so 150 cm = 1 m 50 cm)"
       },
@@ -97,14 +102,16 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "Emma brought 39 stickers. She gave 21 to Bonnie and 11 to Chloe. How many does she have **left**?",
+        prompt: "Emma brought 39 stickers. She gave 21 to Bonnie and 11 to Chloe. How many does she have left?",
+        cubes: {"q": "How many does she have left?", "key": ["gave", "left"], "ops": ["−"], "also": ["+"], "solve": [{"t": "Add what she gave away first", "s": "21 + 11 = 32. 39 − 32 = 7."}, {"t": "Take away one at a time", "s": "39 − 21 = 18, then 18 − 11 = 7."}]},
         follow: "Discuss the most efficient strategy.",
         interact: [{ kind: "input", fields: [{ value: 7, suffix: "stickers" }] }],
         answer: "**7** stickers. Efficient: 21 + 11 = 32, then 39 − 32 = 7."
       },
       {
         type: "sr", focus: "Geometric measure B: Length",
-        prompt: "Shannon is building a walking track **250 metres** long. How long is the track in **centimetres**?",
+        prompt: "Shannon is building a walking track 250 metres long. How long is the track in centimetres?",
+        cubes: {"q": "How long is the track in centimetres?", "key": ["centimetres"], "ops": ["×"], "solve": [{"t": "Use 1 m = 100 cm", "s": "250 × 100 = 25 000 cm."}, {"t": "Build it up", "s": "100 m = 10 000 cm, so 200 m = 20 000 cm and 50 m = 5000 cm. 20 000 + 5000 = 25 000 cm."}]},
         interact: [{ kind: "input", fields: [{ value: 25000, suffix: "cm" }] }],
         answer: "1 m = 100 cm, so 250 m = **25 000 cm**"
       },
@@ -134,13 +141,15 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Additive relations B",
-        prompt: "Sarah has 245 marbles and Ben has 378. They tip them into one jar. How many **altogether**?",
+        prompt: "Sarah has 245 marbles and Ben has 378. They tip them into one jar. How many altogether?",
+        cubes: {"q": "How many altogether?", "key": ["altogether"], "ops": ["+"], "solve": [{"t": "Split into place values", "s": "200 + 300 = 500, 40 + 70 = 110, 5 + 8 = 13. 500 + 110 + 13 = 623."}, {"t": "Make a friendly number", "s": "Move 2 from 245 to 378: 243 + 380 = 623."}]},
         interact: [{ kind: "input", fields: [{ value: 623, suffix: "marbles" }] }],
         answer: "245 + 378 = **623** marbles"
       },
       {
         type: "sr", focus: "Geometric measure B: Length",
-        prompt: "Kate's flower bed will be 4 metres long and 3 metres wide. What is the **perimeter** in **centimetres**?",
+        prompt: "Kate's flower bed will be 4 metres long and 3 metres wide. What is the perimeter in centimetres?",
+        cubes: {"q": "What is the perimeter in centimetres?", "key": ["perimeter", "centimetres"], "ops": ["+", "×"], "solve": [{"t": "Add all four sides", "s": "4 + 3 + 4 + 3 = 14 m. 14 × 100 = 1400 cm."}, {"t": "Convert first", "s": "4 m = 400 cm and 3 m = 300 cm. 400 + 300 + 400 + 300 = 1400 cm."}]},
         interact: [{ kind: "input", fields: [{ value: 1400, suffix: "cm" }] }],
         answer: "4 + 3 + 4 + 3 = 14 m = **1400 cm**"
       },
@@ -170,7 +179,8 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Additive relations B",
-        prompt: "There were 1500 balloons at the school fair. After the first hour, 625 popped. How many were **left**?",
+        prompt: "There were 1500 balloons at the school fair. After the first hour, 625 popped. How many were left?",
+        cubes: {"q": "How many were left?", "key": ["popped", "left"], "ops": ["−"], "solve": [{"t": "Count up", "s": "625 + 75 = 700, then 700 + 800 = 1500. 75 + 800 = 875."}, {"t": "Split the number taken away", "s": "1500 − 600 = 900, then 900 − 25 = 875."}]},
         interact: [{ kind: "input", fields: [{ value: 875, suffix: "balloons" }] }],
         answer: "1500 − 625 = **875** balloons"
       },
@@ -207,13 +217,15 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Additive relations B",
-        prompt: "A book drive collected 840 books in week 1 and 675 in week 2. The school donated 950 books to a library. How many books are **left**?",
+        prompt: "A book drive collected 840 books in week 1 and 675 in week 2. The school donated 950 books to a library. How many books are left?",
+        cubes: {"q": "How many books are left?", "key": ["collected", "donated", "left"], "ops": ["+", "−"], "solve": [{"t": "Add, then subtract", "s": "840 + 675 = 1515. 1515 − 950 = 565."}, {"t": "Round and adjust", "s": "1515 − 1000 = 515. We took away 50 too many, so add 50 back: 565."}]},
         interact: [{ kind: "input", fields: [{ value: 565, suffix: "books" }] }],
         answer: "840 + 675 = 1515, then 1515 − 950 = **565** books"
       },
       {
         type: "sr", focus: "Non-spatial measure B: Mass",
-        prompt: "A chocolate bar weighs 250 grams. What **fraction of a kilogram** is this?",
+        prompt: "A chocolate bar weighs 250 grams. What fraction of a kilogram is this?",
+        cubes: {"q": "What fraction of a kilogram is this?", "key": ["fraction of a kilogram"], "ops": ["÷"], "solve": [{"t": "How many fit in 1 kg?", "s": "1 kg = 1000 g. 250 + 250 + 250 + 250 = 1000, so 4 bars make 1 kg. One bar is [1/4] kg."}, {"t": "Halve and halve again", "s": "Half of 1000 g is 500 g. Half again is 250 g. Half of a half is [1/4]."}]},
         interact: [{ kind: "input", fields: [{ value: 0.25, suffix: "kg", placeholder: "a fraction" }] }],
         answer: "**[1/4]** of a kilogram, because 4 × 250 g = 1000 g = 1 kg."
       },
@@ -228,7 +240,8 @@ UNITS.push({
     [
       {
         type: "mc", focus: "Additive relations A",
-        prompt: "I pay for a $3.75 sandwich with a $5 note. What is the **correct change**?",
+        prompt: "I pay for a $3.75 sandwich with a $5 note. What is the correct change?",
+        cubes: {"q": "What is the correct change?", "key": ["change"], "ops": ["−"], "solve": [{"t": "Count up", "s": "$3.75 + 25c = $4, then $4 + $1 = $5. The change is $1.25."}, {"t": "Subtract", "s": "$5.00 − $3.75 = $1.25. Find the coins that make $1.25."}]},
         options: [{ img: "coins-change-A.png", alt: "a 1 dollar, a 20 cent and a 5 cent coin" }, { img: "coins-change-B.png", alt: "a 50 cent and two 20 cent coins" },
           { img: "coins-change-C.png", alt: "a 1 dollar, a 20 cent and a 10 cent coin" }, { img: "coins-change-D.png", alt: "three 50 cent coins" }],
         answer: 0,
@@ -242,7 +255,8 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Additive relations B",
-        prompt: "Lucy has $45. She buys a book for $18 and a toy for $22. How much money is **left**?",
+        prompt: "Lucy has $45. She buys a book for $18 and a toy for $22. How much money is left?",
+        cubes: {"q": "How much money is left?", "key": ["buys", "left"], "ops": ["+", "−"], "solve": [{"t": "Add the costs first", "s": "$18 + $22 = $40. $45 − $40 = $5."}, {"t": "Take away one at a time", "s": "$45 − $18 = $27, then $27 − $22 = $5."}]},
         interact: [{ kind: "input", fields: [{ prefix: "$", value: 5 }] }],
         answer: "$18 + $22 = $40, so $45 − $40 = **$5**"
       },
@@ -266,7 +280,8 @@ UNITS.push({
     [
       {
         type: "tf", focus: "Additive relations A",
-        prompt: "Tobi said, “I had $5 and bought an ice-block for $3.75. I have $1.75 left.” Leon said, “That can't be right!” Is Tobi's statement **true or false**?",
+        prompt: "Tobi said, “I had $5 and bought an ice-block for $3.75. I have $1.75 left.” Leon said, “That can't be right!” Is Tobi's statement true or false?",
+        cubes: {"q": "Is Tobi's statement true or false?", "key": ["left"], "ops": ["−"], "solve": [{"t": "Count up", "s": "$3.75 + 25c = $4, and $4 + $1 = $5. The change should be $1.25."}, {"t": "Check by adding", "s": "$3.75 + $1.75 = $5.50. That's more than $5, so Tobi is wrong."}]},
         answer: false,
         explain: "$5 − $3.75 = $1.25, so Tobi should have $1.25 left."
       },
@@ -279,7 +294,8 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Additive relations B",
-        prompt: "Tom has $67 for a school project. He buys markers for $15.75 and paper for $10.23. How much does he have **left**?",
+        prompt: "Tom has $67 for a school project. He buys markers for $15.75 and paper for $10.23. How much does he have left?",
+        cubes: {"q": "How much does he have left?", "key": ["buys", "left"], "ops": ["+", "−"], "solve": [{"t": "Add the costs first", "s": "$15.75 + $10.23 = $25.98. $67 − $25.98 = $41.02."}, {"t": "Round and adjust", "s": "The costs are about $26, and $67 − $26 = $41. We added 2c too much, so it's $41.02."}]},
         interact: [{ kind: "input", fields: [{ prefix: "$", value: 41.02 }] }],
         answer: "$15.75 + $10.23 = $25.98, so $67 − $25.98 = **$41.02**"
       },

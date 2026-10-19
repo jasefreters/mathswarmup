@@ -29,6 +29,11 @@
   --ok: #1B8A55;
   --ok-soft: #DDF5E8;
   --done-bg: #F0FAF4;
+  --cu-c: #C2185B;
+  --cu-u: #2449D8;
+  --cu-b: #D9480F;
+  --cu-e: #7B3FC4;
+  --cu-s: #1B8A55;
   --bad: #C4372C;
   --bad-soft: #FBE2DF;
   --img-bg: #FFFFFF;
@@ -42,14 +47,14 @@
   :root:not([data-theme="light"]) {
     --paper: #0F1524; --gridline: rgba(124, 155, 255, 0.045); --card: #182136; --sunk: #121A2C; --ink: #E7ECF7; --muted: #9AA7C2;
     --line: #2B3753; --accent: #7C9BFF; --accent-soft: #24305A; --accent-ink: #0F1524; --hi: #FFD93D; --hi-soft: #3A3415; --hi-ink: #17233F;
-    --c-mc: #8FA9FF; --c-sr: #4FC6CF; --ok: #4CC38A; --ok-soft: #14382A; --done-bg: #15281E; --bad: #FF7B6F; --bad-soft: #43201D;
+    --c-mc: #8FA9FF; --c-sr: #4FC6CF; --ok: #4CC38A; --ok-soft: #14382A; --done-bg: #15281E; --cu-c: #F06BA8; --cu-u: #7C9BFF; --cu-b: #FF8F5A; --cu-e: #B98BF0; --cu-s: #4CC38A; --bad: #FF7B6F; --bad-soft: #43201D;
     --img-bg: #FFFFFF; --fill: #F2A65E; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.22); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #0F1524; --gridline: rgba(124, 155, 255, 0.045); --card: #182136; --sunk: #121A2C; --ink: #E7ECF7; --muted: #9AA7C2;
   --line: #2B3753; --accent: #7C9BFF; --accent-soft: #24305A; --accent-ink: #0F1524; --hi: #FFD93D; --hi-soft: #3A3415; --hi-ink: #17233F;
-  --c-mc: #8FA9FF; --c-sr: #4FC6CF; --ok: #4CC38A; --ok-soft: #14382A; --done-bg: #15281E; --bad: #FF7B6F; --bad-soft: #43201D;
+  --c-mc: #8FA9FF; --c-sr: #4FC6CF; --ok: #4CC38A; --ok-soft: #14382A; --done-bg: #15281E; --cu-c: #F06BA8; --cu-u: #7C9BFF; --cu-b: #FF8F5A; --cu-e: #B98BF0; --cu-s: #4CC38A; --bad: #FF7B6F; --bad-soft: #43201D;
   --img-bg: #FFFFFF; --fill: #F2A65E; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.22); color-scheme: dark;
 }
 
@@ -167,6 +172,32 @@ body.answers .ans, .ans.show { display: block; }
 .ans p + p { margin-top: 4px; color: var(--muted); }
 .note { display: none; font-size: .86rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
 body.notes .note { display: block; }
+
+/* CUBES strategy */
+.cu { border-radius: 4px; transition: box-shadow .25s ease, text-decoration-color .25s ease, outline-color .25s ease; text-decoration: underline transparent; text-decoration-thickness: 3px; text-underline-offset: .22em; outline: 2.5px solid transparent; outline-offset: 2px; }
+.show-c .cu-c { border-radius: 999px; box-shadow: 0 0 0 .14em var(--card), 0 0 0 calc(.14em + 2.5px) var(--cu-c); }
+.show-u .cu-u { text-decoration-color: var(--cu-u); }
+.show-b .cu-b { outline-color: var(--cu-b); }
+.cubes { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); padding-top: 18px; }
+.cubes-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+.cube { --k: var(--cu-c); display: inline-flex; align-items: center; gap: 9px; border: 2px solid var(--line); background: var(--card); border-radius: 12px; padding: 5px 14px 5px 5px; font-weight: 700; font-size: .78em; }
+.cube b { width: 1.9em; height: 1.9em; display: grid; place-items: center; border-radius: 8px; background: var(--k); color: var(--card); font-family: var(--f-display); font-size: 1.15em; box-shadow: inset -4px -4px 0 rgba(0,0,0,.14); }
+.cube:hover { border-color: var(--k); }
+.cube[aria-pressed="true"] { border-color: var(--k); background: var(--sunk); }
+.cube-u { --k: var(--cu-u); } .cube-b { --k: var(--cu-b); } .cube-e { --k: var(--cu-e); } .cube-s { --k: var(--cu-s); }
+.cube-panel { --k: var(--cu-c); border-left: 4px solid var(--k); background: var(--sunk); border-radius: 0 12px 12px 0; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; font-size: .85em; }
+.cube-panel.cube-u { --k: var(--cu-u); } .cube-panel.cube-b { --k: var(--cu-b); } .cube-panel.cube-e { --k: var(--cu-e); } .cube-panel.cube-s { --k: var(--cu-s); }
+.cube-say { margin: 0; }
+.cube-say b { color: var(--k); }
+.cube-say span { display: block; color: var(--muted); margin-top: 2px; }
+.cube-note { margin: 0; font-weight: 700; }
+.ops { display: flex; gap: 10px; flex-wrap: wrap; }
+.op { width: 2.4em; height: 2.4em; border: 2px solid var(--line); background: var(--card); border-radius: 12px; font-size: 1.5em; font-weight: 800; line-height: 1; }
+.op:hover { border-color: var(--cu-e); }
+.op.ok { border-color: var(--ok); background: var(--ok-soft); color: var(--ok); }
+.op.no { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); }
+.ways { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; }
+.ways li b { display: block; }
 
 /* Completed card */
 .tile.done { background: var(--done-bg); border-color: var(--ok); }
