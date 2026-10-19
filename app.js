@@ -687,8 +687,11 @@
   }
 
   // ---------- spotlight ----------
-  function openSpot(i) { state.spot = i; $("spot").hidden = false; document.body.style.overflow = "hidden"; renderSpot(); $("sClose").focus(); }
+  // The timer moves into the question view so the class can still see it.
+  const timerHome = () => $("timer").parentNode.id === "spotTimer" && $("bAns").parentNode.insertBefore($("timer"), $("bAns"));
+  function openSpot(i) { $("spotTimer").appendChild($("timer")); state.spot = i; $("spot").hidden = false; document.body.style.overflow = "hidden"; renderSpot(); $("sClose").focus(); }
   function closeSpot() {
+    timerHome();
     const i = state.spot; state.spot = -1; $("spot").hidden = true; document.body.style.overflow = ""; $("spotBody").innerHTML = "";
     renderNav(); renderBoard();
     const t = $("board").querySelector("[data-i='" + i + "']"); if (t) t.focus({ preventScroll: true });
