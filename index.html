@@ -28,6 +28,7 @@
   --c-sr: #0D7680;
   --ok: #1B8A55;
   --ok-soft: #DDF5E8;
+  --done-bg: #F0FAF4;
   --bad: #C4372C;
   --bad-soft: #FBE2DF;
   --img-bg: #FFFFFF;
@@ -41,14 +42,14 @@
   :root:not([data-theme="light"]) {
     --paper: #0F1524; --gridline: rgba(124, 155, 255, 0.045); --card: #182136; --sunk: #121A2C; --ink: #E7ECF7; --muted: #9AA7C2;
     --line: #2B3753; --accent: #7C9BFF; --accent-soft: #24305A; --accent-ink: #0F1524; --hi: #FFD93D; --hi-soft: #3A3415; --hi-ink: #17233F;
-    --c-mc: #8FA9FF; --c-sr: #4FC6CF; --ok: #4CC38A; --ok-soft: #14382A; --bad: #FF7B6F; --bad-soft: #43201D;
+    --c-mc: #8FA9FF; --c-sr: #4FC6CF; --ok: #4CC38A; --ok-soft: #14382A; --done-bg: #15281E; --bad: #FF7B6F; --bad-soft: #43201D;
     --img-bg: #FFFFFF; --fill: #F2A65E; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.22); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #0F1524; --gridline: rgba(124, 155, 255, 0.045); --card: #182136; --sunk: #121A2C; --ink: #E7ECF7; --muted: #9AA7C2;
   --line: #2B3753; --accent: #7C9BFF; --accent-soft: #24305A; --accent-ink: #0F1524; --hi: #FFD93D; --hi-soft: #3A3415; --hi-ink: #17233F;
-  --c-mc: #8FA9FF; --c-sr: #4FC6CF; --ok: #4CC38A; --ok-soft: #14382A; --bad: #FF7B6F; --bad-soft: #43201D;
+  --c-mc: #8FA9FF; --c-sr: #4FC6CF; --ok: #4CC38A; --ok-soft: #14382A; --done-bg: #15281E; --bad: #FF7B6F; --bad-soft: #43201D;
   --img-bg: #FFFFFF; --fill: #F2A65E; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.22); color-scheme: dark;
 }
 
@@ -73,7 +74,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--card); border-bottom: 1px solid var(--line); }
 .bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-block: 10px; }
 .brand { font-family: var(--f-display); font-weight: 800; font-size: 1.35rem; letter-spacing: -0.01em; margin: 0 6px 0 0; white-space: nowrap; }
-.brand span { background: linear-gradient(transparent 58%, var(--hi) 58%, var(--hi) 92%, transparent 92%); padding: 0 2px; color: var(--hi-ink); }
+.brand span { background: linear-gradient(transparent 10%, var(--hi) 10%, var(--hi) 94%, transparent 94%); padding: 0 4px; color: var(--hi-ink); }
 .years { display: flex; gap: 4px; margin-right: auto; }
 .years button { border: 0; background: transparent; border-radius: 10px; padding: 8px 14px; font-family: var(--f-display); font-weight: 700; font-size: 1.02rem; color: var(--muted); white-space: nowrap; }
 .years button:hover { color: var(--ink); background: var(--sunk); }
@@ -166,6 +167,24 @@ body.answers .ans, .ans.show { display: block; }
 .ans p + p { margin-top: 4px; color: var(--muted); }
 .note { display: none; font-size: .86rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
 body.notes .note { display: block; }
+
+/* Completed card */
+.tile.done { background: var(--done-bg); border-color: var(--ok); }
+.tile.done .hint { visibility: hidden; }
+.tile.done .num { background: var(--ok); }
+.done-badge { position: absolute; top: 14px; right: 14px; display: inline-flex; align-items: center; gap: 5px; background: var(--ok); color: var(--card); border-radius: 999px; padding: 4px 11px 4px 8px; font-weight: 700; font-size: .82rem; }
+.done-badge svg { width: 16px; height: 16px; }
+.tile.pop .done-badge { animation: badge-in .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+.tile.pop { animation: tile-pop .45s ease both; }
+.confetti { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.confetti i { position: absolute; left: 50%; top: 45%; width: 9px; height: 13px; border-radius: 2px; opacity: 0; animation: confetti 1.5s cubic-bezier(.15, .7, .3, 1) var(--d) forwards; }
+@keyframes confetti {
+  0% { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(.6); }
+  60% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y) + 70px)) rotate(var(--r)) scale(1); }
+}
+@keyframes badge-in { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes tile-pop { 0% { transform: scale(1); } 40% { transform: scale(1.025); } 100% { transform: scale(1); } }
 
 /* Fractions */
 .mixed { display: inline-flex; align-items: center; gap: .08em; vertical-align: middle; white-space: nowrap; }
@@ -272,6 +291,7 @@ body.notes .note { display: block; }
 .sum6 .row { display: flex; align-items: center; gap: 10px; }
 .sum6 .row > span { width: 1em; font-weight: 800; font-size: 1.3em; text-align: center; }
 .sum6 .inp { width: 7.5em; letter-spacing: .2em; font-size: 1.15em; font-weight: 700; }
+.sum6 .inp::placeholder { letter-spacing: normal; font-weight: 400; }
 .sum6 .total { border-top: 3px solid var(--ink); padding-top: 8px; font-weight: 800; font-size: 1.15em; letter-spacing: .1em; padding-left: 2em; }
 
 /* order */

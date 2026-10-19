@@ -55,7 +55,19 @@
   function items() {
     if (state.mixed) return state.mixed;
     const u = currentUnit();
-    return u ? u.reviews[state.day].map((q) => ({ q, unit: u })) : [];
+    return u ? u.reviews[state.day].map((q, i) => ({ q, unit: u, key: qKey(u, state.day, i) })) : [];
+  }
+  const qKey = (u, d, i) => "S" + u.stage + u.ab + "-" + u.unit + "-" + d + "-" + i;
+
+  // Completed questions are remembered for today only, so tomorrow's board starts fresh.
+  const today = new Date().toDateString();
+  const done = new Set((() => { try { const v = JSON.parse(localStorage.getItem("dailydash-done") || "{}"); return v.date === today ? v.keys : []; } catch (e) { return []; } })());
+  const celebrate = new Set();
+  function saveDone() { try { localStorage.setItem("dailydash-done", JSON.stringify({ date: today, keys: [...done] })); } catch (e) {} }
+  function markDone() {
+    const it = items()[state.spot];
+    if (!it || done.has(it.key)) return;
+    done.add(it.key); celebrate.add(it.key); saveDone();
   }
   function save() { store.set({ year: state.year, term: state.term, ls: state.ls, day: state.day, notes: document.body.classList.contains("notes") }); }
 
@@ -503,7 +515,8 @@
       for (let d = w * 4; d < Math.min(u.reviews.length, w * 4 + 4); d++) h += "<button class='day' data-day='" + d + "' aria-pressed='" + (!state.mixed && d === state.day) + "' aria-label='Week " + weekOf(u.ls, d) + " " + DAYNAMES[d % 4] + "'>" + DAYS[d % 4] + "</button>";
       h += "</div></div>";
     }
-    h += "<div class='wk'><span>Revision</span><div><button class='day mix' id='bMix' aria-pressed='" + !!state.mixed + "' title='Random questions from every review so far'>" + (state.mixed ? "Shuffle again" : "Mix it up") + "</button></div></div>";
+    h += "<div class='wk'><span>Revision</span><div><button class='day mix' id='bMix' aria-pressed='" + !!state.mixed + "' title='Random questions from every review so far'>" + (state.mixed ? "Shuffle again" : "Mix it up") + "</button>" +
+      (items().some((it) => done.has(it.key)) ? "<button class='day mix' id='bClear' title='Untick the questions on this board'>Clear ticks</button>" : "") + "</div></div>";
     $("days").innerHTML = h;
   }
   function renderBoard() {
@@ -527,8 +540,32 @@
       $("eyebrow").textContent = stageLbl + " · Unit " + u.unit + " · Review " + (state.day + 1);
       $("title").textContent = "Week " + weekOf(u.ls, state.day) + " · " + DAYNAMES[state.day % 4];
     }
-    $("board").innerHTML = items().map((it, i) =>
-      "<article class='tile t-" + it.q.type + "' tabindex='0' data-i='" + i + "' aria-label='Question " + (i + 1) + ". Open it.'>" + qHTML(it, i, false) + "</article>").join("");
+    $("board").innerHTML = items().map((it, i) => {
+      const isDone = done.has(it.key);
+      return "<article class='tile t-" + it.q.type + (isDone ? " done" : "") + "' tabindex='0' data-i='" + i + "' aria-label='Question " + (i + 1) + (isDone ? ", done" : "") + ". Open it.'>" +
+        qHTML(it, i, false) + (isDone ? "<span class='done-badge' aria-hidden='true'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12.5l4.5 4.5L19 7.5'/></svg>Done</span>" : "") + "</article>";
+    }).join("");
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    $("board").querySelectorAll(".tile").forEach((t) => {
+      const key = items()[+t.dataset.i].key;
+      if (celebrate.has(key)) { celebrate.delete(key); if (!reduce) confetti(t); }
+    });
+  }
+
+  function confetti(tile) {
+    const layer = document.createElement("span");
+    layer.className = "confetti";
+    const colours = ["#2449D8", "#1B8A55", "#FFD23F", "#F2994A", "#E5484D", "#8A3CC4", "#4FC6CF"];
+    let h = "";
+    for (let i = 0; i < 46; i++) {
+      const a = Math.random() * Math.PI * 2, dist = 90 + Math.random() * 170;
+      h += "<i style='--x:" + Math.round(Math.cos(a) * dist) + "px;--y:" + Math.round(Math.sin(a) * dist * 0.7 - 40) + "px;--r:" + Math.round(Math.random() * 720 - 360) + "deg;" +
+        "--d:" + Math.round(Math.random() * 140) + "ms;background:" + colours[i % colours.length] + ";" + (i % 3 ? "" : "border-radius:50%;") + "'></i>";
+    }
+    layer.innerHTML = h;
+    tile.appendChild(layer);
+    tile.classList.add("pop");
+    setTimeout(() => { layer.remove(); tile.classList.remove("pop"); }, 1900);
   }
   function render() { renderNav(); renderBoard(); save(); }
 
@@ -538,7 +575,7 @@
       if (u.term > state.term || (u.term === state.term && u.ls > state.ls)) return;
       u.reviews.forEach((rev, d) => {
         if (u.term === state.term && u.ls === state.ls && d > state.day) return;
-        rev.forEach((q) => (q.type === "sr" ? pool.sr : pool.choice).push({ q, unit: u, from: "Wk " + weekOf(u.ls, d) + (u.term !== state.term ? " T" + u.term : "") + " " + DAYS[d % 4] }));
+        rev.forEach((q, i) => (q.type === "sr" ? pool.sr : pool.choice).push({ q, unit: u, key: qKey(u, d, i), from: "Wk " + weekOf(u.ls, d) + (u.term !== state.term ? " T" + u.term : "") + " " + DAYS[d % 4] }));
       });
     });
     const out = [...shuffle(pool.choice).slice(0, 1), ...shuffle(pool.sr).slice(0, 4)];
@@ -547,7 +584,11 @@
 
   // ---------- spotlight ----------
   function openSpot(i) { state.spot = i; $("spot").hidden = false; document.body.style.overflow = "hidden"; renderSpot(); $("sClose").focus(); }
-  function closeSpot() { const i = state.spot; state.spot = -1; $("spot").hidden = true; document.body.style.overflow = ""; $("spotBody").innerHTML = ""; const t = $("board").querySelector("[data-i='" + i + "']"); if (t) t.focus(); }
+  function closeSpot() {
+    const i = state.spot; state.spot = -1; $("spot").hidden = true; document.body.style.overflow = ""; $("spotBody").innerHTML = "";
+    renderNav(); renderBoard();
+    const t = $("board").querySelector("[data-i='" + i + "']"); if (t) t.focus({ preventScroll: true });
+  }
   function renderSpot() {
     const list = items(), it = list[state.spot], q = it.q;
     $("spotBody").innerHTML = "<article class='tile t-" + q.type + "'>" + qHTML(it, state.spot, true) + "</article>";
@@ -565,6 +606,8 @@
       if (fb) { fb.className = "feedback"; fb.textContent = ""; }
       if (q.interact) $("spotBody").querySelectorAll("[data-part]").forEach((el) => { const p = q.interact[+el.dataset.part]; if (W[p.kind].reveal) W[p.kind].reveal(el, p); });
       if (q.type !== "sr") $("spotBody").querySelectorAll(".opt").forEach((b) => { if (+b.dataset.i === correctIndex(q)) b.classList.add("right"); });
+      // Discussion, drawing and exploring questions have nothing to check, so seeing the answer completes them.
+      if (q.type === "sr" && !(q.interact || []).some((p) => W[p.kind].check)) markDone();
     }
   }
   function correctIndex(q) { return q.type === "mc" ? q.answer : q.answer ? 0 : 1; }
@@ -581,6 +624,7 @@
     }
     fb.className = "feedback " + (ok ? "ok" : "no");
     fb.textContent = (ok ? "✓ Correct! " : "Not quite. ") + (msg || (ok ? "Well done." : "Check the red ones and try again."));
+    if (ok) markDone();
   }
 
   // ---------- events ----------
@@ -592,12 +636,14 @@
     if ((b = t.closest("[data-ls]"))) { state.ls = +b.dataset.ls; state.day = 0; state.mixed = null; render(); return; }
     if ((b = t.closest("[data-day]"))) { state.day = +b.dataset.day; state.mixed = null; render(); return; }
     if (t.closest("#bMix")) { state.mixed = buildMix(); render(); return; }
+    if (t.closest("#bClear")) { items().forEach((it) => done.delete(it.key)); saveDone(); render(); return; }
     if ((b = t.closest("#board .tile"))) { openSpot(+b.dataset.i); return; }
     if ((b = t.closest("#spotBody .opt"))) {
       const q = items()[state.spot].q, ok = +b.dataset.i === correctIndex(q), fb = $("spotBody").querySelector("[data-fb]");
       b.classList.add(ok ? "right" : "wrong");
       fb.className = "feedback " + (ok ? "ok" : "no");
       fb.innerHTML = ok ? "✓ Correct!" + (q.explain ? " " + fmt(q.explain) : "") : "Not quite — try again.";
+      if (ok) markDone();
       return;
     }
     if (t.closest("#spotBody [data-check]")) { runCheck(); return; }

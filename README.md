@@ -26,6 +26,7 @@ To change which scope-and-sequence year a class follows, edit [`config.js`](conf
   - tap to choose, select, put things in order or balance parcels on a scale
   - shade a fraction strip, build a whole from a part, or draw
   - press **Check** to see what's right; anything wrong turns red
+- **Done:** when the class gets a question right, its card on the board celebrates with confetti and stays green with a ✓ Done badge. Discussion and drawing questions count as done once the answer is shown. Ticks last for the day; **Clear ticks** resets the board.
 - **Show answer** reveals the answer. On number lines it also moves the cards to the right places.
 - **Answers** in the top bar reveals every answer on the board. The keyboard shortcut is `A`.
 - **Timer:** 3, 5 or 10 minutes.
