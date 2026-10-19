@@ -150,7 +150,13 @@ UNITS.push({
         type: "sr", focus: "Geometric measure B: Length",
         prompt: "Kate's flower bed will be 4 metres long and 3 metres wide. What is the perimeter in centimetres?",
         cubes: {"ops": ["+", "×"], "solve": [{"t": "Add all four sides", "s": "4 + 3 + 4 + 3 = 14 m. 14 × 100 = 1400 cm."}, {"t": "Convert first", "s": "4 m = 400 cm and 3 m = 300 cm. 400 + 300 + 400 + 300 = 1400 cm."}]},
-        interact: [{ kind: "input", fields: [{ value: 1400, suffix: "cm" }] }],
+        interact: [
+          { kind: "sides", label: "Rectangular flower bed, 4 m by 3 m", view: [370, 260],
+            poly: [[40,60], [280,60], [280,240], [40,240]],
+            dims: [{ from: [42,38], to: [278,38] }, { from: [302,62], to: [302,238] }],
+            labels: [{ x: 160, y: 26, t: "4 m" }, { x: 312, y: 156, t: "3 m", anchor: "start" }] },
+          { kind: "input", fields: [{ label: "Perimeter", value: 1400, suffix: "cm" }] }
+        ],
         answer: "4 + 3 + 4 + 3 = 14 m = **1400 cm**"
       },
       {

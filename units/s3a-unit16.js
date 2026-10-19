@@ -125,9 +125,10 @@ UNITS.push({
         type: "sr", focus: "Geometric measure A: Length",
         prompt: "Find the total **perimeter** of this composite shape.",
         interact: [
-          { kind: "sides", label: "Yellow H-shaped composite shape", view: [400, 370],
-            poly: [[60,40], [156,40], [156,148], [216,148], [216,40], [312,40], [312,340], [216,340], [216,232], [156,232], [156,340], [60,340]],
-            labels: [{ x: 108, y: 28, t: "8 cm" }, { x: 264, y: 28, t: "8 cm" }, { x: 186, y: 100, t: "5 cm" }, { x: 324, y: 197, t: "25 cm", anchor: "start" }, { x: 186, y: 296, t: "9 cm" }] },
+          { kind: "sides", label: "Yellow H-shaped composite shape", view: [420, 400],
+            poly: [[60,64], [156,64], [156,172], [216,172], [216,64], [312,64], [312,364], [216,364], [216,256], [156,256], [156,364], [60,364]],
+            dims: [{ from: [62,40], to: [154,40] }, { from: [218,40], to: [310,40] }, { from: [158,94], to: [214,94] }, { from: [334,66], to: [334,362] }, { from: [186,258], to: [186,362] }],
+            labels: [{ x: 108, y: 28, t: "8 cm" }, { x: 264, y: 28, t: "8 cm" }, { x: 186, y: 124, t: "5 cm" }, { x: 344, y: 221, t: "25 cm", anchor: "start" }, { x: 186, y: 316, t: "9 cm", halo: true }] },
           { kind: "input", fields: [{ label: "Perimeter", value: 128, suffix: "cm" }] }
         ],
         answer: "**128 cm** (25 + 25 + 8 + 8 + 8 + 8 + 9 + 5 + 9 + 9 + 5 + 9)",
@@ -171,7 +172,13 @@ UNITS.push({
         type: "sr", focus: "Geometric measure A: Length",
         prompt: "Pop's garden needs 60 m of fencing. What could be the length and width of the garden?",
         cubes: {"ops": ["÷"], "also": ["+", "−"], "solve": [{"t": "Halve the fencing", "s": "One length and one width use half the fence: 60 ÷ 2 = 30 m. Choose two numbers that add to 30, like 20 m and 10 m."}, {"t": "Guess and check", "s": "Try 15 m by 15 m: 15 + 15 + 15 + 15 = 60 m. It works!"}]},
-        interact: [{ kind: "pair", labels: ["Length", "Width"], unit: "m", rule: "perimeter", target: 60 }],
+        interact: [
+          { kind: "sides", label: "Rectangular garden with unknown length and width", view: [420, 240],
+            poly: [[40,60], [320,60], [320,220], [40,220]],
+            dims: [{ from: [42,38], to: [318,38] }, { from: [342,62], to: [342,218] }],
+            labels: [{ x: 180, y: 26, t: "length" }, { x: 352, y: 146, t: "width", anchor: "start" }] },
+          { kind: "pair", labels: ["Length", "Width"], unit: "m", rule: "perimeter", target: 60 }
+        ],
         answer: "Length + width must equal 30 m. For example 20 m × 10 m, 15 m × 15 m or 25 m × 5 m."
       },
       {

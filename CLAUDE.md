@@ -8,7 +8,7 @@ The teacher's rule: **each question is optimised for interactivity.** When addin
 
 1. **Make the picture the activity.** If students would count, sort, compare, measure or locate things in an image, redraw it as an interactive SVG instead of showing a static picture plus typed boxes.
    - Counting or sorting shapes and objects → `classify` (tap a category, then tap each shape; live tallies, optional `total` for fraction tallies).
-   - Perimeter or counting sides → `sides` (tap each side to turn it green). Never total the lengths; the teacher does that with the class.
+   - **Every perimeter question** (with or without a picture) → `sides`: redraw the shape, tap each side to turn it green, with a count of sides marked. Never total the lengths; the teacher does that with the class. Draw a dimension arrow (`dims`) for every labelled length so it is clear which side or gap each label measures. Leave unlabelled sides unlabelled, as in the source.
    - Placing values → `numberline` (drag cards) or `marker` (slide a pin).
    - Ordering → `order`. Grouping or weighing → `balance`, `select`, `choose`.
    - Fractions of a whole → `shade` (strip) or `stack` (build a whole from a part).
@@ -23,3 +23,18 @@ Before publishing, run every question through a browser with the correct answer 
 ## Filing units
 
 `config.js` maps Year 3–6 to a stage and a scope-and-sequence year (A/B). `scope.js` lists which unit sits in each term and 2-week learning sequence (`ls` 1–5). Each unit has 8 reviews: Monday to Thursday of each week. Do not add the daily number sense activities.
+
+## Standards for every addition
+
+These are the teacher's decisions so far. Apply them to all new content without being asked.
+
+- **Name and layout:** The Daily Dash. Year 3–6 tabs, then term, then fortnight, then day (Monday to Thursday of each week). The board stays clean and minimal to keep cognitive load low.
+- **No daily number sense activities.** Classes run their own.
+- **Interactivity first** (see above). Redraw pictures as interactive SVG whenever students would work with them.
+- **Word problems:** no bold text in the prompt. Add a `cubes` field with `ops` (+ `also`/`note` where needed) and two `solve` methods. Circle, Underline and Box are teacher-led: the teacher taps the words live, and adjacent words join into one shape. Never pre-set the words or numbers to mark.
+- **Perimeter:** tap-the-sides with dimension arrows, no running total (see above).
+- **Done state:** a correct Check (or the correct multiple-choice or true/false option) marks the question done. The card plays confetti on return to the board and stays green with a Done badge. Questions with no check are done when the answer is shown.
+- **Timer** is visible on the board and inside every question.
+- **Answers:** work out and verify every answer yourself, and flag any assumption in `explain` (for example, an unlabelled length).
+- **Filing:** units go to their term and learning sequence from the scope and sequence (5 two-week sequences per term). Current mapping: Year 3 = Stage 2 A, Year 4 = Stage 2 B, Year 5 = Stage 3 A, Year 6 = Stage 3 B (`config.js`).
+- **Publishing:** commit to `main` on `jasefreters/mathswarmup` (GitHub Pages). Before pushing, run every question in a browser with its correct answer and check it passes.

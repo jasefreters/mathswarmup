@@ -490,7 +490,12 @@
           const [a, b] = [pts[i], pts[(i + 1) % n]], seg = "x1='" + a[0] + "' y1='" + a[1] + "' x2='" + b[0] + "' y2='" + b[1] + "'";
           svg += "<g class='sd' data-sd='" + i + "'><line " + seg + " class='sd-hit'/><line " + seg + " class='sd-line'/></g>";
         }
-        svg += (p.labels || []).map((l) => "<text x='" + l.x + "' y='" + l.y + "' text-anchor='" + (l.anchor || "middle") + "' class='sd-lab'>" + esc(l.t) + "</text>").join("") + "</svg>";
+        // Dimension arrows show exactly which length each label measures.
+        const head = (x, y, dx, dy) => { const L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, w = 6, h = 11;
+          return "<polygon class='sd-dimh' points='" + x + "," + y + " " + (x - ux * h - uy * w) + "," + (y - uy * h + ux * w) + " " + (x - ux * h + uy * w) + "," + (y - uy * h - ux * w) + "'/>"; };
+        svg += (p.dims || []).map((d) => { const [x1, y1] = d.from, [x2, y2] = d.to;
+          return "<line class='sd-dim' x1='" + x1 + "' y1='" + y1 + "' x2='" + x2 + "' y2='" + y2 + "'/>" + head(x2, y2, x2 - x1, y2 - y1) + head(x1, y1, x1 - x2, y1 - y2); }).join("");
+        svg += (p.labels || []).map((l) => "<text x='" + l.x + "' y='" + l.y + "' text-anchor='" + (l.anchor || "middle") + "' class='sd-lab" + (l.halo ? " halo" : "") + "'>" + esc(l.t) + "</text>").join("") + "</svg>";
         return (pv ? "" : "<p class='ph'>Tap each side as you count it. It turns green.</p>") + "<div class='cl-pic sd-pic'>" + svg + "</div>" +
           (pv ? "" : "<p class='readout' data-sdread>0 of " + n + " sides marked</p>");
       },
