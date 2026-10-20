@@ -589,8 +589,13 @@ footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; dis
 .mr-name { font-size: 26px; }
 /* place value houses */
 .pv-housed th, .pv-housed td { border-left: 1px dashed var(--line); }
-.pv-housed .pv-h0 { background: var(--accent-soft); }
-.pv-housed .pv-h1 { background: var(--hi-soft); }
+.pv-housed .pv-h-millions { background: #F3E3FF; }
+.pv-housed .pv-h-thousands { background: var(--hi-soft); }
+.pv-housed .pv-h-ones { background: var(--accent-soft); }
+.pv-housed .pv-h-decimals { background: #DDF5E8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pv-housed .pv-h-millions { background: #34254A; } :root:not([data-theme="light"]) .pv-housed .pv-h-decimals { background: #14382A; } }
+:root[data-theme="dark"] .pv-housed .pv-h-millions { background: #34254A; }
+:root[data-theme="dark"] .pv-housed .pv-h-decimals { background: #14382A; }
 .pv-housed .pv-hs { border-left: 4px solid var(--ink); }
 .pv-housed th:first-child, .pv-housed td:first-child { border-left: 0; }
 .pv-house { font-family: var(--f-display); font-weight: 800; font-size: 1.05em !important; text-transform: none !important; letter-spacing: 0 !important; color: var(--ink) !important; padding: 8px 4px !important; border-bottom: 2px solid var(--ink) !important; }
@@ -681,23 +686,23 @@ footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; dis
   <div class="spot-main"><div class="wrap" id="spotBody"></div></div>
 </div>
 
-<script src="config.js?v=202610201137"></script>
-<script src="scope.js?v=202610201137"></script>
-<script src="units/s2a-unit1.js?v=202610201137"></script>
-<script src="units/s3a-unit1.js?v=202610201137"></script>
-<script src="units/s3a-unit16.js?v=202610201137"></script>
-<script src="units/s2b-unit36.js?v=202610201137"></script>
-<script src="units/s2b-unit21.js?v=202610201137"></script>
-<script src="units/s3b-unit21.js?v=202610201137"></script>
-<script src="units/s2a-unit2.js?v=202610201137"></script>
-<script src="units/s2b-unit22.js?v=202610201137"></script>
-<script src="units/s3a-unit2.js?v=202610201137"></script>
-<script src="units/s3b-unit22.js?v=202610201137"></script>
-<script src="units/s2a-unit3.js?v=202610201137"></script>
-<script src="units/s2b-unit23.js?v=202610201137"></script>
-<script src="units/s3a-unit3.js?v=202610201137"></script>
-<script src="units/s3b-unit23.js?v=202610201137"></script>
-<script src="units/s2b-unit24.js?v=202610201137"></script>
-<script src="app.js?v=202610201137"></script>
+<script src="config.js?v=202610201943"></script>
+<script src="scope.js?v=202610201943"></script>
+<script src="units/s2a-unit1.js?v=202610201943"></script>
+<script src="units/s3a-unit1.js?v=202610201943"></script>
+<script src="units/s3a-unit16.js?v=202610201943"></script>
+<script src="units/s2b-unit36.js?v=202610201943"></script>
+<script src="units/s2b-unit21.js?v=202610201943"></script>
+<script src="units/s3b-unit21.js?v=202610201943"></script>
+<script src="units/s2a-unit2.js?v=202610201943"></script>
+<script src="units/s2b-unit22.js?v=202610201943"></script>
+<script src="units/s3a-unit2.js?v=202610201943"></script>
+<script src="units/s3b-unit22.js?v=202610201943"></script>
+<script src="units/s2a-unit3.js?v=202610201943"></script>
+<script src="units/s2b-unit23.js?v=202610201943"></script>
+<script src="units/s3a-unit3.js?v=202610201943"></script>
+<script src="units/s3b-unit23.js?v=202610201943"></script>
+<script src="units/s2b-unit24.js?v=202610201943"></script>
+<script src="app.js?v=202610201943"></script>
 </body>
 </html>

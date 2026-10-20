@@ -1132,14 +1132,14 @@
           const k = [];
           if (p.cols[i] === "t" && i > 0) k.push("pv-dec");
           if (hs && i > 0 && PV_HOUSE[p.cols[i]][0] !== PV_HOUSE[p.cols[i - 1]][0]) k.push("pv-hs");
-          if (hs) k.push("pv-h" + (hs.findIndex((g) => g.cols.includes(i)) % 2));
+          if (hs) k.push("pv-h-" + PV_HOUSE[p.cols[i]][0].toLowerCase());
           return k.length ? " class='" + k.join(" ") + "'" : "";
         };
         let head = "<tr>" + cols.map((c, i) => "<th" + cls(i) + ">" + c.name + "</th>").join("") + "</tr>";
-        if (hs) head = "<tr class='pv-houses'>" + hs.map((g, gi) => "<th colspan='" + g.cols.length + "' class='pv-house pv-h" + (gi % 2) + (gi ? " pv-hs" : "") + "'>" + g.name + "</th>").join("") + "</tr>" +
+        if (hs) head = "<tr class='pv-houses'>" + hs.map((g, gi) => "<th colspan='" + g.cols.length + "' class='pv-house pv-h-" + g.name.toLowerCase() + (gi ? " pv-hs" : "") + "'>" + g.name + "</th>").join("") + "</tr>" +
           "<tr class='pv-hto'>" + cols.map((c, i) => "<th" + cls(i) + " title='" + c.name + "'>" + PV_HOUSE[p.cols[i]][1] + "</th>").join("") + "</tr>";
         let h = (p.hint && !pv ? "<p class='ph'>" + esc(p.hint) + "</p>" : "") + "<div class='pvw'><table class='pv" + (hs ? " pv-housed" : "") + "'>" + head + "<tr>" + cols.map((c, i) => cell(c, i).replace(/^<td>/, "<td" + cls(i) + ">")).join("") + "</tr>" +
-          (hs && !pv ? "<tr class='pv-read' data-pvread hidden>" + hs.map((g, gi) => "<td colspan='" + g.cols.length + "' class='pv-h" + (gi % 2) + (gi ? " pv-hs" : "") + "' data-hread='" + gi + "'></td>").join("") + "</tr>" : "") + "</table></div>";
+          (hs && !pv ? "<tr class='pv-read' data-pvread hidden>" + hs.map((g, gi) => "<td colspan='" + g.cols.length + "' class='pv-h-" + g.name.toLowerCase() + (gi ? " pv-hs" : "") + "' data-hread='" + gi + "'></td>").join("") + "</tr>" : "") + "</table></div>";
         if (!pv && p.shift) h += "<div class='checkrow'><button class='btn primary-soft' data-pvshift='1'>× 10</button><button class='btn primary-soft' data-pvshift='-1'>÷ 10</button><button class='btn' data-pvreset>Reset chart</button><span class='readout' data-pvmult></span></div>";
         if (!pv) h += "<p class='pv-expr' data-expr></p><div class='checkrow'>" + (pvHouses(p) ? "<button class='btn' data-pvhouses aria-pressed='false'>Read each house</button>" : "") + "<button class='btn' data-pvtotal aria-pressed='false'>Show the number</button><span class='pv-total' data-total hidden></span></div>";
         return h;
@@ -1222,8 +1222,10 @@
       },
       init(el, p) {
         const svg = el.querySelector("svg"), arm = svg.querySelector(".move"), h = svg.querySelector(".ang-h"), arc = svg.querySelector(".ang-arc"), sq = svg.querySelector(".ang-sq");
-        let L = p.reflex ? 95 : 160; const vx = p.reflex ? 170 : 60, vy = p.reflex ? 115 : 190, fixed = svg.querySelector(".ang-arm:not(.move)");
-        if (p.reflex) { fixed.setAttribute("x1", vx); fixed.setAttribute("y1", vy); fixed.setAttribute("x2", 310); fixed.setAttribute("y2", vy); arm.setAttribute("x1", vx); arm.setAttribute("y1", vy); svg.querySelector(".ang-v").setAttribute("cx", vx); svg.querySelector(".ang-v").setAttribute("cy", vy); }
+        // The vertex sits in the middle so the arm stays in view at every angle, up to a full turn.
+        let L = p.reflex ? 105 : 140; const vx = 170, vy = p.reflex ? 125 : 175, fixed = svg.querySelector(".ang-arm:not(.move)");
+        svg.setAttribute("viewBox", "0 0 340 " + (p.reflex ? 250 : 200));
+        fixed.setAttribute("x1", vx); fixed.setAttribute("y1", vy); fixed.setAttribute("x2", vx + L); fixed.setAttribute("y2", vy); arm.setAttribute("x1", vx); arm.setAttribute("y1", vy); svg.querySelector(".ang-v").setAttribute("cx", vx); svg.querySelector(".ang-v").setAttribute("cy", vy);
         const set = (deg) => {
           deg = Math.max(5, Math.min(p.reflex ? 360 : 180, deg)); for (const snap of [90, 180, 270, 360]) if (Math.abs(deg - snap) < 4) deg = snap;
           el._deg = deg; const r = (deg * Math.PI) / 180, x = vx + L * Math.cos(r), y = vy - L * Math.sin(r);
@@ -1243,8 +1245,8 @@
           const up = () => { svg.removeEventListener("pointermove", mv); svg.removeEventListener("pointerup", up); };
           svg.addEventListener("pointermove", mv); svg.addEventListener("pointerup", up);
         });
-        el.addEventListener("click", (e) => { const b = e.target.closest("[data-anglen]"); if (!b) return; const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.textContent = on ? "Make the arms shorter" : "Make the arms longer"; L = on ? 175 : 110; fixed.setAttribute("x2", vx + L + (on ? 90 : 0)); set(el._deg); });
-        if (p.lengthen) { L = 110; fixed.setAttribute("x2", vx + L); }
+        el.addEventListener("click", (e) => { const b = e.target.closest("[data-anglen]"); if (!b) return; const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.textContent = on ? "Make the arms shorter" : "Make the arms longer"; L = on ? 150 : 85; fixed.setAttribute("x2", vx + L); set(el._deg); });
+        if (p.lengthen) { L = 85; fixed.setAttribute("x2", vx + L); }
         set(p.start || 120);
       },
       check(el, p) {
