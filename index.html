@@ -540,6 +540,51 @@ body.notes .note { display: block; }
 footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; display: grid; gap: 2px; }
 
 @media (prefers-reduced-motion: reduce) { .board .tile, .beam { transition: none; } .board .tile:hover { transform: none; } }
+/* Question tables */
+.qt-w { overflow-x: auto; margin: 4px 0 6px; }
+.qt { border-collapse: collapse; margin: 0 auto; font-family: var(--f-school); font-size: 1.1em; }
+.qt th, .qt td { border: 2px solid var(--ink); padding: 8px 16px; text-align: center; font-weight: 400; }
+.qt th { background: var(--sunk); }
+.cell.head { background: var(--sunk); }
+.cells > * { width: auto; }
+.fields.col { flex-direction: column; align-items: stretch; }
+.fields.col .field { display: flex; align-items: center; gap: 12px; }
+.fields.col .field > span { min-width: 9em; }
+.clk-n24 { font-family: var(--f-display); font-weight: 700; font-size: 10px; fill: #C4372C; text-anchor: middle; }
+/* Corner tester */
+.co-pic, .mr-pic, .pl-pic { background: var(--img-bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.co, .mr { width: 100%; height: auto; max-height: 360px; display: block; }
+.co-name { fill: #fff; font: 800 30px var(--f-display); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.co-lab { fill: #17233F; font: 800 22px var(--f-display); text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.co-hit { fill: rgba(255,228,92,.0); stroke: #FFE45C; stroke-width: 3; stroke-dasharray: 4 4; cursor: pointer; }
+.co-hit:hover { fill: rgba(255,228,92,.35); }
+.co-sq { fill: rgba(242,153,74,.35); stroke: #D9480F; stroke-width: 2.5; stroke-dasharray: 6 4; pointer-events: none; }
+.co-arc { fill: rgba(196,55,44,.75); stroke: #C4372C; stroke-width: 3; pointer-events: none; }
+/* Mirror lines */
+.mr-hit { stroke: transparent; stroke-width: 22; cursor: pointer; }
+.mr-line { stroke: #FFE45C; stroke-width: 4; stroke-dasharray: 10 7; pointer-events: none; }
+.mr-l:hover .mr-line { stroke: #FFF3A6; }
+.mr-l.yes .mr-line { stroke: #1B8A55; stroke-dasharray: none; stroke-width: 6; }
+.mr-l.no .mr-line { stroke: #C4372C; stroke-width: 5; }
+.mr-ghost { fill: rgba(242,153,74,.28); stroke: #D9480F; stroke-width: 3; stroke-dasharray: 7 5; pointer-events: none; }
+.mr-ghost.yes { fill: rgba(27,138,85,.25); stroke: #1B8A55; }
+/* Cartesian plane */
+.pl { width: 100%; max-width: 480px; height: auto; display: block; margin: 0 auto; }
+.pl-g { stroke: #D6DEEA; stroke-width: 1; }
+.pl-ax { stroke: #17233F; stroke-width: 2.5; }
+.pl-n { font: 600 12px var(--f-body); fill: #5A6885; text-anchor: middle; }
+.pl-n.on { fill: #D9480F; font-weight: 800; font-size: 15px; }
+.pl-axl { font: italic 700 15px var(--f-body); fill: #17233F; text-anchor: middle; }
+.pl-hit { fill: transparent; cursor: pointer; }
+.pl-hit:hover { fill: rgba(36,73,216,.18); }
+.pl-pt { fill: #C4372C; pointer-events: none; }
+.pl-pl { font: 800 17px var(--f-display); fill: #17233F; pointer-events: none; }
+.pl-guide { stroke: #D9480F; stroke-width: 3; stroke-dasharray: 7 5; fill: none; }
+.pl-dot { fill: #2449D8; }
+.pl-dl { font: 700 13px var(--f-body); fill: #2449D8; }
+.pv td.pv-dec { position: relative; border-left: 1px solid var(--ink); }
+.pv td.pv-dec::before { content: ""; position: absolute; left: -8px; top: 38px; width: 15px; height: 15px; border-radius: 50%; background: var(--ink); }
+.mr-name { font-size: 26px; }
 </style>
 </head>
 <body>
@@ -598,6 +643,7 @@ footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; dis
 <script src="units/s3a-unit16.js"></script>
 <script src="units/s2b-unit36.js"></script>
 <script src="units/s2b-unit21.js"></script>
+<script src="units/s3b-unit21.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

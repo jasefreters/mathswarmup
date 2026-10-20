@@ -341,6 +341,7 @@
     },
     choose: {
       html(p, pv) {
+        if (pv && p.rows.length > 2) return "";
         return p.rows.map((r, ri) => "<div class='choice-row'><span>" + fmt(r.t) + "</span><span class='pills' role='group'>" +
           r.options.map((o, oi) => "<button class='pill' data-r='" + ri + "' data-o='" + oi + "' aria-pressed='false'" + (pv ? " disabled" : "") + ">" + fmt(o) + "</button>").join("") + "</span></div>").join("");
       },
@@ -506,13 +507,14 @@
       html(p, pv) {
         let h = "<div class='shade' role='group' aria-label='Strip of " + p.parts + " parts'>";
         for (let i = 0; i < p.parts; i++) h += "<button aria-pressed='false' aria-label='Part " + (i + 1) + "'" + (pv ? " disabled" : "") + "></button>";
-        return h + "</div>" + (pv ? "" : "<p class='readout' data-read>Tap the parts to shade them.</p>");
+        return h + "</div>" + (pv ? "" : "<p class='readout' data-read>" + esc(p.hint || "Tap the parts to shade them.") + "</p>");
       },
       init(el, p) {
         el.addEventListener("click", (e) => {
           const b = e.target.closest(".shade button"); if (!b) return;
           b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true");
           const n = el.querySelectorAll(".shade [aria-pressed='true']").length;
+          if (p.pct) { el.querySelector("[data-read]").innerHTML = fmt("Shaded: [" + n + "/" + p.parts + "]") + " = " + fmtN((n / p.parts) * 100) + "%" + (p.each ? " = " + (p.money ? "$" : "") + fmtN(n * p.each) : ""); return; }
           el.querySelector("[data-read]").innerHTML = fmt("Shaded: [" + n + "/" + p.parts + "]") + (n * 2 === p.parts ? " — exactly half" : n * 2 < p.parts ? " — less than half" : " — more than half");
         });
       }
@@ -653,6 +655,27 @@
       },
       init(el) { el.addEventListener("click", (e) => { const b = e.target.closest(".gr-c"); if (!b) return; el.querySelectorAll(".gr-c").forEach((x) => x.classList.toggle("on", x === b)); el.querySelector("[data-grread]").textContent = "Grid reference: " + b.dataset.ref; }); }
     },
+    // Number sentences that show a property: each must be true (both sides equal) and fit its pattern.
+    sentence: {
+      html(p, pv) {
+        if (pv) return "";
+        return "<div class='fields col'>" + p.fields.map((f, i) => "<label class='field'><span>" + fmt(f.label) + "</span><input class='inp wide' data-f='" + i + "' placeholder='" + esc(f.placeholder || "") + "' autocomplete='off' spellcheck='false'></label>").join("") + "</div>";
+      },
+      check(el, p) {
+        let all = true, filled = true, why = null;
+        p.fields.forEach((f, i) => {
+          const inp = el.querySelector("[data-f='" + i + "']"), v = inp.value.trim(); inp.classList.remove("ok", "no");
+          if (!v) { filled = false; return; }
+          const sides = v.split("="), vals = sides.map(evalExpr);
+          let ok = sides.length === 2 && vals.every((x) => x != null) && close(vals[0], vals[1]);
+          if (!ok && !why) why = "Check that both sides of “" + v + "” are equal.";
+          if (ok && !new RegExp(f.re).test(v.replace(/[×X*]/g, "x").replace(/[−–]/g, "-"))) { ok = false; why = why || f.msg; }
+          inp.classList.add(ok ? "ok" : "no"); if (!ok) all = false;
+        });
+        if (!filled) return { ok: null, msg: "Write a number sentence in every box." };
+        return { ok: all, msg: all ? null : why };
+      }
+    },
     // Corner tester: tap a corner to lay a right-angle tester on it, tap again to name the angle.
     corners: {
       html(p, pv) {
@@ -700,7 +723,7 @@
           const out = [];
           p.shapes.forEach((sh, si) => (sh.marks || sh.p.map((_, v) => ({ v }))).forEach((m, mi) => {
             if (el._st[si + "-" + mi] !== 2) return; const G = W.corners.geo(sh, m), nm = angleName(G.deg);
-            out.push((m.l || sh.l || "") + (m.l || sh.l ? ": " : "") + nm + (p.deg ? " (" + Math.round(G.deg) + "°)" : ""));
+            out.push((m.l || sh.l || "") + (m.l || sh.l ? ": " : "") + (m.l || sh.l ? nm : nm[0].toUpperCase() + nm.slice(1)) + " angle" + (p.deg ? " (" + Math.round(G.deg) + "°)" : ""));
           }));
           el.querySelector("[data-coread]").textContent = out.join(" · ");
         };
@@ -754,7 +777,7 @@
         let s = "<svg viewBox='0 0 " + p.view[0] + " " + p.view[1] + "' class='mr' role='img' aria-label='" + esc(p.label || "Shapes with lines to test for symmetry") + "'>";
         p.shapes.forEach((sh, si) => {
           s += "<polygon points='" + sh.p.map((q) => q.join(",")).join(" ") + "' class='mr-shape' fill='" + (sh.fill || "#0B2A6B") + "'/><g data-mrg='" + si + "'></g>";
-          if (sh.l) s += "<text class='co-name' x='" + (sh.lx ?? sh.p.reduce((a, q) => a + q[0], 0) / sh.p.length) + "' y='" + (sh.ly ?? sh.p.reduce((a, q) => a + q[1], 0) / sh.p.length) + "'>" + esc(sh.l) + "</text>";
+          if (sh.l) s += "<text class='co-lab mr-name' x='" + (sh.lx ?? sh.p.reduce((a, q) => a + q[0], 0) / sh.p.length) + "' y='" + (sh.ly ?? Math.max(...sh.p.map((q) => q[1])) + 46) + "'>" + esc(sh.l) + "</text>";
           (sh.lines || []).forEach((L, li) => { const seg = "x1='" + L[0] + "' y1='" + L[1] + "' x2='" + L[2] + "' y2='" + L[3] + "'"; s += "<g class='mr-l' data-ml='" + si + "-" + li + "'><line " + seg + " class='mr-hit'/><line " + seg + " class='mr-line'/></g>"; });
         });
         return (pv ? "" : "<p class='ph'>" + esc(p.hint || "Predict first. Then tap a dashed line to fold the shape over it.") + "</p>") + "<div class='mr-pic'>" + s + "</svg></div>" + (pv ? "" : "<p class='readout' data-mrread></p>");
@@ -866,6 +889,7 @@
         let h = "<div class='clk-w'><svg viewBox='0 0 220 220' class='clk' role='img' aria-label='Analogue clock'><circle cx='110' cy='110' r='100' class='clk-f'/>";
         for (let i = 0; i < 60; i++) { const a = (i * 6 * Math.PI) / 180, r1 = i % 5 ? 92 : 86; h += "<line x1='" + (110 + r1 * Math.sin(a)) + "' y1='" + (110 - r1 * Math.cos(a)) + "' x2='" + (110 + 98 * Math.sin(a)) + "' y2='" + (110 - 98 * Math.cos(a)) + "' class='clk-t" + (i % 5 ? "" : " big") + "'/>"; }
         for (let n = 1; n <= 12; n++) { const a = (n * 30 * Math.PI) / 180; h += "<text x='" + (110 + 72 * Math.sin(a)) + "' y='" + (110 - 72 * Math.cos(a) + 7) + "' class='clk-n'>" + n + "</text>"; }
+        if (p.h24) for (let n = 1; n <= 12; n++) { const a = (n * 30 * Math.PI) / 180; h += "<text x='" + (110 + 50 * Math.sin(a)) + "' y='" + (110 - 50 * Math.cos(a) + 5) + "' class='clk-n24'>" + (n === 12 ? "00" : n + 12) + "</text>"; }
         return h + "<line class='clk-hh' x1='110' y1='110' x2='110' y2='60'/><line class='clk-mh' x1='110' y1='110' x2='110' y2='30'/><circle cx='110' cy='110' r='6' class='clk-c'/></svg></div>" + (p.drag ? "<p class='ph'>Drag the long hand to move the time.</p>" : "");
       },
       init(el, p) {
@@ -888,12 +912,12 @@
     // Number chart puzzle: a piece of a hundred chart with some numbers missing.
     cells: {
       html(p, pv) {
-        let h = "<div class='cells' style='grid-template-columns:repeat(" + p.cols + ", " + (p.w || 64) + "px)'>"; let k = 0;
+        let h = "<div class='cells' style='grid-template-columns:repeat(" + p.cols + ", minmax(0, " + (p.w || 64) + "px))'>"; let k = 0;
         p.grid.forEach((row) => row.forEach((c) => {
           if (c === null) h += "<span></span>";
           else if (typeof c === "number") h += "<span class='cell given'>" + c + "</span>";
           else if (typeof c === "string") h += "<span class='cell given" + (c.startsWith("#") ? " head" : "") + "'>" + fmt(c.replace(/^#/, "")) + "</span>";
-          else h += "<input class='inp cell' data-f='" + k++ + "' inputmode='numeric' autocomplete='off' aria-label='Missing number'" + (pv ? " disabled" : "") + ">";
+          else h += "<input class='inp cell' data-f='" + k++ + "' inputmode='" + (p.free ? "text" : "numeric") + "' autocomplete='off' aria-label='Missing number'" + (pv ? " disabled" : "") + ">";
         }));
         return h + "</div>";
       },
@@ -991,8 +1015,9 @@
           }
           return t + "</td>";
         };
-        let h = "<div class='pvw'><table class='pv'><tr>" + cols.map((c) => "<th>" + c.name + "</th>").join("") + "</tr><tr>" + cols.map(cell).join("") + "</tr></table></div>";
-        if (!pv && p.shift) h += "<div class='checkrow'><button class='btn primary-soft' data-pvshift='1'>× 10</button><button class='btn primary-soft' data-pvshift='-1'>÷ 10</button><button class='btn' data-pvreset>Start again</button><span class='readout' data-pvmult></span></div>";
+        const dec = (i) => (p.cols[i] === "t" && i > 0 ? " class='pv-dec'" : "");
+        let h = (p.hint && !pv ? "<p class='ph'>" + esc(p.hint) + "</p>" : "") + "<div class='pvw'><table class='pv'><tr>" + cols.map((c, i) => "<th" + dec(i) + ">" + c.name + "</th>").join("") + "</tr><tr>" + cols.map((c, i) => cell(c, i).replace(/^<td>/, "<td" + dec(i) + ">")).join("") + "</tr></table></div>";
+        if (!pv && p.shift) h += "<div class='checkrow'><button class='btn primary-soft' data-pvshift='1'>× 10</button><button class='btn primary-soft' data-pvshift='-1'>÷ 10</button><button class='btn' data-pvreset>Reset chart</button><span class='readout' data-pvmult></span></div>";
         if (!pv) h += "<p class='pv-expr' data-expr></p><div class='checkrow'><button class='btn' data-pvtotal aria-pressed='false'>Show the number</button><span class='pv-total' data-total hidden></span></div>";
         return h;
       },
@@ -1332,6 +1357,7 @@
     h += "<p class='prompt'>" + txt(q.prompt, 0) + "</p>";
     if (q.display) h += "<div class='display'>" + fmt(q.display) + "</div>";
     if (q.list) h += "<ul class='list'>" + q.list.map((x, li) => "<li>" + txt(x, li + 1) + "</li>").join("") + "</ul>";
+    if (q.table) { let k = 50; h += "<div class='qt-w'><table class='qt'>" + q.table.map((row, ri) => "<tr>" + row.map((c) => (ri ? "<td>" : "<th>") + txt(String(c), k++) + (ri ? "</td>" : "</th>")).join("") + "</tr>").join("") + "</table></div>"; }
     if (q.visual) h += VIS[q.visual.kind](q.visual);
     if (q.img) h += "<figure class='pic'><img src='" + u.img + q.img + "' alt=''></figure>";
     if (q.type === "mc") {
