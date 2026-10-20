@@ -1733,4 +1733,17 @@
 
   tDraw();
   render();
+
+  // GitHub Pages lets browsers reuse the page for 10 minutes. If a newer version has been
+  // published since this copy loaded, reload once so the class sees the latest questions.
+  (function () {
+    if (!/github\.io$/.test(location.hostname)) return;
+    const me = [...document.scripts].map((x) => x.src).find((x) => /app\.js\?v=/.test(x)); if (!me) return;
+    const v = me.split("?v=")[1];
+    fetch("index.html?check=" + Date.now(), { cache: "no-store" }).then((r) => r.text()).then((t) => {
+      const m = t.match(/app\.js\?v=(\d+)/); if (!m || m[1] === v) return;
+      try { if (sessionStorage.getItem("dd-reloaded") === m[1]) return; sessionStorage.setItem("dd-reloaded", m[1]); } catch (e) { return; }
+      location.reload();
+    }).catch(() => {});
+  })();
 })();
