@@ -1110,10 +1110,16 @@
     },
     // Place value chart: counters in columns, with trades to show standard and non-standard partitions.
     pv: {
+      start(p) {
+        const cols = p.cols.map((k) => PV[k]), c = cols.map(() => 0);
+        if (typeof p.start === "number") { let rest = Math.round(p.start * 1000); cols.forEach((col, i) => { c[i] = Math.floor(rest / col.m); rest -= c[i] * col.m; }); }
+        else if (p.start) cols.forEach((col, i) => { c[i] = p.start[p.cols[i]] || 0; });
+        return c;
+      },
       html(p, pv) {
-        const cols = p.cols.map((k) => PV[k]);
+        const cols = p.cols.map((k) => PV[k]), c0 = W.pv.start(p);
         const cell = (c, i) => {
-          let t = "<td><div class='pv-n' data-n='" + i + "'>0</div><div class='pv-dots' data-dots='" + i + "'></div>";
+          let t = "<td><div class='pv-n' data-n='" + i + "'>" + c0[i] + "</div><div class='pv-dots' data-dots='" + i + "'>" + "<i></i>".repeat(Math.min(c0[i], 30)) + "</div>";
           if (!pv) {
             t += "<div class='pv-pm'><button class='pv-b' data-pv='-' data-i='" + i + "' aria-label='Take one " + c.name + "'>−</button><button class='pv-b' data-pv='+' data-i='" + i + "' aria-label='Add one " + c.name + "'>+</button></div><div class='pv-tr'>";
             if (i > 0) t += "<button class='pv-t' data-pv='group' data-i='" + i + "' title='Group 10 into 1 of the column to the left'>← group 10</button>";
@@ -1140,9 +1146,7 @@
       },
       init(el, p) {
         const cols = p.cols.map((k) => PV[k]), unit = PV[p.cols[p.cols.length - 1]].m;
-        let c = cols.map(() => 0);
-        if (typeof p.start === "number") { let rest = Math.round(p.start * 1000); cols.forEach((col, i) => { c[i] = Math.floor(rest / col.m); rest -= c[i] * col.m; }); }
-        else if (p.start) cols.forEach((col, i) => { c[i] = p.start[p.cols[i]] || 0; });
+        const c = W.pv.start(p);
         el._c = c; const c0 = c.slice(); el._m = 0;
         const total = () => el._c.reduce((s, n, i) => s + n * cols[i].m, 0) / 1000;
         el._total = total;

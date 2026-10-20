@@ -402,7 +402,8 @@ body.notes .note { display: block; }
 .jl-tools .inp { width: 5em; }
 /* place value chart */
 .pvw { overflow-x: auto; }
-.pv { border-collapse: collapse; width: 100%; min-width: 360px; text-align: center; }
+.pv { border-collapse: collapse; width: 100%; min-width: 360px; text-align: center; table-layout: fixed; }
+.board .pv-dots { display: none; }
 .pv th { font-size: .62em; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 4px 2px; border-bottom: 2px solid var(--line); }
 .pv td { border-left: 1px dashed var(--line); padding: 8px 4px; vertical-align: top; }
 .pv td:first-child { border-left: 0; }
@@ -680,18 +681,18 @@ footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; dis
   <div class="spot-main"><div class="wrap" id="spotBody"></div></div>
 </div>
 
-<script src="config.js"></script>
-<script src="scope.js"></script>
-<script src="units/s2a-unit1.js"></script>
-<script src="units/s3a-unit1.js"></script>
-<script src="units/s3a-unit16.js"></script>
-<script src="units/s2b-unit36.js"></script>
-<script src="units/s2b-unit21.js"></script>
-<script src="units/s3b-unit21.js"></script>
-<script src="units/s2a-unit2.js"></script>
-<script src="units/s2b-unit22.js"></script>
-<script src="units/s3a-unit2.js"></script>
-<script src="units/s3b-unit22.js"></script>
-<script src="app.js"></script>
+<script src="config.js?v=202610201104"></script>
+<script src="scope.js?v=202610201104"></script>
+<script src="units/s2a-unit1.js?v=202610201104"></script>
+<script src="units/s3a-unit1.js?v=202610201104"></script>
+<script src="units/s3a-unit16.js?v=202610201104"></script>
+<script src="units/s2b-unit36.js?v=202610201104"></script>
+<script src="units/s2b-unit21.js?v=202610201104"></script>
+<script src="units/s3b-unit21.js?v=202610201104"></script>
+<script src="units/s2a-unit2.js?v=202610201104"></script>
+<script src="units/s2b-unit22.js?v=202610201104"></script>
+<script src="units/s3a-unit2.js?v=202610201104"></script>
+<script src="units/s3b-unit22.js?v=202610201104"></script>
+<script src="app.js?v=202610201104"></script>
 </body>
 </html>
