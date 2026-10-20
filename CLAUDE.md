@@ -35,6 +35,7 @@ These are the teacher's decisions so far. Apply them to all new content without 
 - **Perimeter:** tap-the-sides with dimension arrows, no running total (see above).
 - **Done state:** a correct Check (or the correct multiple-choice or true/false option) marks the question done. The card plays confetti on return to the board and stays green with a Done badge. Questions with no check are done when the answer is shown.
 - **Timer** is visible on the board and inside every question.
+- **School font:** question text uses `--f-school`, which is NSW Pre-cursive Solid when it's installed on the device, falling back to the free Google font Edu NSW ACT Foundation. Never commit the NSW font file to the public repo, because its licence isn't confirmed for web hosting.
 - **Answers:** work out and verify every answer yourself, and flag any assumption in `explain` (for example, an unlabelled length).
 - **Filing:** units go to their term and learning sequence from the scope and sequence (5 two-week sequences per term). Current mapping: Year 3 = Stage 2 A, Year 4 = Stage 2 B, Year 5 = Stage 3 A, Year 6 = Stage 3 B (`config.js`).
 - **Publishing:** commit to `main` on `jasefreters/mathswarmup` (GitHub Pages). Before pushing, run every question in a browser with its correct answer and check it passes.

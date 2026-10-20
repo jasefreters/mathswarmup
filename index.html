@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Edu+NSW+ACT+Foundation:wght@400..700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
 <style>
 /* Layout: a quiet exercise-book board. Year tabs and tools in one top bar; five numbered question cards; one question at a time when opened, with its own hands-on activity. */
 :root {
@@ -41,6 +41,8 @@
   --shadow: 0 1px 2px rgba(23, 35, 63, .05), 0 4px 14px rgba(23, 35, 63, .05);
   --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  /* School handwriting font for question text: the NSW font when it is installed on the device, otherwise a free foundation-style font. */
+  --f-school: "NSWPreCursiveSolid", "NSW Pre-Cursive Solid", "NSW Pre-cursive Solid", "Edu NSW ACT Foundation", "Atkinson Hyperlegible", system-ui, sans-serif;
   --r: 14px;
 }
 @media (prefers-color-scheme: dark) {
@@ -227,6 +229,13 @@ body.notes .note { display: block; }
 }
 @keyframes badge-in { from { transform: scale(0); } to { transform: scale(1); } }
 @keyframes tile-pop { 0% { transform: scale(1); } 40% { transform: scale(1.025); } 100% { transform: scale(1); } }
+
+/* Question text in the school font */
+.q .prompt, .q .display, .q .list, .q .follow, .opt > span:not(.let), .ans p, .tv, .choice-row > span, .field > span:not(.unit) { font-family: var(--f-school); }
+.q .prompt, .q .display, .q .list, .q .follow, .opt > span:not(.let), .ans p, .choice-row > span, .field > span:not(.unit) { font-weight: 600; }
+.q .prompt { font-size: 1.22rem; line-height: 1.55; }
+.q .list, .opt > span:not(.let), .choice-row > span, .field > span:not(.unit), .ans p { font-size: 1.1em; }
+.spot .q .prompt { font-size: 1.3em; }
 
 /* Fractions */
 .mixed { display: inline-flex; align-items: center; gap: .08em; vertical-align: middle; white-space: nowrap; }
