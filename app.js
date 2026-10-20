@@ -240,6 +240,15 @@
     M: { name: "Millions", m: 1e9 }, HTh: { name: "Hundred thousands", m: 1e8 }, TTh: { name: "Ten thousands", m: 1e7 }, Th: { name: "Thousands", m: 1e6 },
     H: { name: "Hundreds", m: 1e5 }, T: { name: "Tens", m: 1e4 }, O: { name: "Ones", m: 1e3 }, t: { name: "Tenths", m: 100 }, h: { name: "Hundredths", m: 10 }, th: { name: "Thousandths", m: 1 }
   };
+  // Houses: whole numbers are read in groups of three (hundreds, tens, ones of each house).
+  const PV_HOUSE = { M: ["Millions", "O"], HTh: ["Thousands", "H"], TTh: ["Thousands", "T"], Th: ["Thousands", "O"], H: ["Ones", "H"], T: ["Ones", "T"], O: ["Ones", "O"], t: ["Decimals", "Tenths"], h: ["Decimals", "Hundredths"], th: ["Decimals", "Thousandths"] };
+  const HOUSE_INFO = { Millions: [1e6, "million"], Thousands: [1e3, "thousand"], Ones: [1, ""], Decimals: [1, ""] };
+  function pvHouses(p) {
+    if (p.houses === false || !(p.houses || p.cols.some((k) => k === "TTh" || k === "HTh" || k === "M"))) return null;
+    const out = [];
+    p.cols.forEach((k, i) => { const n = PV_HOUSE[k][0], g = out[out.length - 1]; if (g && g.name === n) g.cols.push(i); else out.push({ name: n, cols: [i], unit: HOUSE_INFO[n][0], word: HOUSE_INFO[n][1] }); });
+    return out;
+  }
   function jFmt(p, v) {
     if (p.time) { const t = ((Math.round(v) % 1440) + 1440) % 1440, hh = Math.floor(t / 60), mm = String(t % 60).padStart(2, "0"); return p.time === "24" ? String(hh).padStart(2, "0") + mm : (hh % 12 || 12) + ":" + mm + (p.ampm ? (hh >= 12 ? " pm" : " am") : ""); }
     if (p.money) return "$" + v.toFixed(2);
@@ -1015,10 +1024,20 @@
           }
           return t + "</td>";
         };
-        const dec = (i) => (p.cols[i] === "t" && i > 0 ? " class='pv-dec'" : "");
-        let h = (p.hint && !pv ? "<p class='ph'>" + esc(p.hint) + "</p>" : "") + "<div class='pvw'><table class='pv'><tr>" + cols.map((c, i) => "<th" + dec(i) + ">" + c.name + "</th>").join("") + "</tr><tr>" + cols.map((c, i) => cell(c, i).replace(/^<td>/, "<td" + dec(i) + ">")).join("") + "</tr></table></div>";
+        const hs = pvHouses(p), cls = (i) => {
+          const k = [];
+          if (p.cols[i] === "t" && i > 0) k.push("pv-dec");
+          if (hs && i > 0 && PV_HOUSE[p.cols[i]][0] !== PV_HOUSE[p.cols[i - 1]][0]) k.push("pv-hs");
+          if (hs) k.push("pv-h" + (hs.findIndex((g) => g.cols.includes(i)) % 2));
+          return k.length ? " class='" + k.join(" ") + "'" : "";
+        };
+        let head = "<tr>" + cols.map((c, i) => "<th" + cls(i) + ">" + c.name + "</th>").join("") + "</tr>";
+        if (hs) head = "<tr class='pv-houses'>" + hs.map((g, gi) => "<th colspan='" + g.cols.length + "' class='pv-house pv-h" + (gi % 2) + (gi ? " pv-hs" : "") + "'>" + g.name + "</th>").join("") + "</tr>" +
+          "<tr class='pv-hto'>" + cols.map((c, i) => "<th" + cls(i) + " title='" + c.name + "'>" + PV_HOUSE[p.cols[i]][1] + "</th>").join("") + "</tr>";
+        let h = (p.hint && !pv ? "<p class='ph'>" + esc(p.hint) + "</p>" : "") + "<div class='pvw'><table class='pv" + (hs ? " pv-housed" : "") + "'>" + head + "<tr>" + cols.map((c, i) => cell(c, i).replace(/^<td>/, "<td" + cls(i) + ">")).join("") + "</tr>" +
+          (hs && !pv ? "<tr class='pv-read' data-pvread hidden>" + hs.map((g, gi) => "<td colspan='" + g.cols.length + "' class='pv-h" + (gi % 2) + (gi ? " pv-hs" : "") + "' data-hread='" + gi + "'></td>").join("") + "</tr>" : "") + "</table></div>";
         if (!pv && p.shift) h += "<div class='checkrow'><button class='btn primary-soft' data-pvshift='1'>× 10</button><button class='btn primary-soft' data-pvshift='-1'>÷ 10</button><button class='btn' data-pvreset>Reset chart</button><span class='readout' data-pvmult></span></div>";
-        if (!pv) h += "<p class='pv-expr' data-expr></p><div class='checkrow'><button class='btn' data-pvtotal aria-pressed='false'>Show the number</button><span class='pv-total' data-total hidden></span></div>";
+        if (!pv) h += "<p class='pv-expr' data-expr></p><div class='checkrow'>" + (pvHouses(p) ? "<button class='btn' data-pvhouses aria-pressed='false'>Read each house</button>" : "") + "<button class='btn' data-pvtotal aria-pressed='false'>Show the number</button><span class='pv-total' data-total hidden></span></div>";
         return h;
       },
       init(el, p) {
@@ -1037,11 +1056,15 @@
           const parts = el._c.map((n, i) => n ? n + " " + (n === 1 ? cols[i].name.replace(/s$/, "") : cols[i].name).toLowerCase() : "").filter(Boolean);
           const ex = el.querySelector("[data-expr]"); if (ex) ex.textContent = parts.length ? parts.join(" + ") : "Use + to add counters.";
           const t = el.querySelector("[data-total]"); if (t) t.textContent = "= " + fmtN(total());
+          const hs = pvHouses(p);
+          if (hs) hs.forEach((g, gi) => { const v = g.cols.reduce((a, i) => a + el._c[i] * cols[i].m, 0) / 1000 / g.unit, td = el.querySelector("[data-hread='" + gi + "']"); if (td) td.textContent = fmtN(v) + (g.word ? " " + g.word : ""); });
           const m = el.querySelector("[data-pvmult]"); if (m) m.textContent = el._m ? (el._m > 0 ? "× " : "÷ ") + fmtN(Math.pow(10, Math.abs(el._m))) + " — every digit moved " + Math.abs(el._m) + " place" + (Math.abs(el._m) > 1 ? "s" : "") + (el._m > 0 ? " left" : " right") : "";
         };
         el._upd = upd;
         el.addEventListener("click", (e) => {
           const b = e.target.closest("[data-pv]"), tt = e.target.closest("[data-pvtotal]");
+          const hb = e.target.closest("[data-pvhouses]");
+          if (hb) { const on = hb.getAttribute("aria-pressed") !== "true"; hb.setAttribute("aria-pressed", on); el.querySelector("[data-pvread]").hidden = !on; hb.textContent = on ? "Hide the houses" : "Read each house"; return; }
           if (tt) { const on = tt.getAttribute("aria-pressed") !== "true"; tt.setAttribute("aria-pressed", on); el.querySelector("[data-total]").hidden = !on; tt.textContent = on ? "Hide the number" : "Show the number"; return; }
           const sh = e.target.closest("[data-pvshift]");
           if (sh) { const d = +sh.dataset.pvshift, k = el._c;

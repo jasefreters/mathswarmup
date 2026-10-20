@@ -585,6 +585,17 @@ footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; dis
 .pv td.pv-dec { position: relative; border-left: 1px solid var(--ink); }
 .pv td.pv-dec::before { content: ""; position: absolute; left: -8px; top: 38px; width: 15px; height: 15px; border-radius: 50%; background: var(--ink); }
 .mr-name { font-size: 26px; }
+/* place value houses */
+.pv-housed th, .pv-housed td { border-left: 1px dashed var(--line); }
+.pv-housed .pv-h0 { background: var(--accent-soft); }
+.pv-housed .pv-h1 { background: var(--hi-soft); }
+.pv-housed .pv-hs { border-left: 4px solid var(--ink); }
+.pv-housed th:first-child, .pv-housed td:first-child { border-left: 0; }
+.pv-house { font-family: var(--f-display); font-weight: 800; font-size: 1.05em !important; text-transform: none !important; letter-spacing: 0 !important; color: var(--ink) !important; padding: 8px 4px !important; border-bottom: 2px solid var(--ink) !important; }
+.pv-hto th { font-family: var(--f-display); font-size: .95em; font-weight: 800; color: var(--ink); text-transform: none; letter-spacing: 0; }
+.pv-read td { font-family: var(--f-display); font-weight: 800; font-size: 1.2em; padding: 10px 4px; border-top: 2px solid var(--ink); }
+.pv-housed tr:first-child .pv-house:first-child { border-top-left-radius: 10px; }
+.pv-housed tr:first-child .pv-house:last-child { border-top-right-radius: 10px; }
 </style>
 </head>
 <body>

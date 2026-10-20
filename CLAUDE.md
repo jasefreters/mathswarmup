@@ -13,7 +13,7 @@ The teacher's rule: **each question is optimised for interactivity.** When addin
    - Ordering → `order`. Grouping or weighing → `balance`, `select`, `choose`.
    - Fractions of a whole → `shade` (strip) or `stack` (build a whole from a part).
    - Drawing or constructing → `sketch`.
-   - Counting on or back, time spans, change → `jumps` (open number line). Place value, ×10/÷10, trades → `pv` (`shift: true` for ×10 and ÷10).
+   - Counting on or back, time spans, change → `jumps` (open number line). Place value, ×10/÷10, trades → `pv` (`shift: true` for ×10 and ÷10). Charts with ten thousands or more are grouped into houses (Millions, Thousands, Ones, each with H T O) automatically, with a Read each house button; `houses: false` turns this off.
    - Area by counting squares → `areagrid`. Arrays and the turnaround fact → `array`. Sharing or packing → `pack`.
    - Angles → `angle` (drag the arm; `names` for acute/obtuse/straight/reflex) or `corners` (tap a corner of a drawn shape to lay a right-angle tester on it, tap again to name it).
    - Symmetry → `mirror` (tap a dashed line to fold the shape over it). Coordinates → `plane` (Cartesian) or `gridref` (map grid).
