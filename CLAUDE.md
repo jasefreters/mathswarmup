@@ -13,6 +13,11 @@ The teacher's rule: **each question is optimised for interactivity.** When addin
    - Ordering → `order`. Grouping or weighing → `balance`, `select`, `choose`.
    - Fractions of a whole → `shade` (strip) or `stack` (build a whole from a part).
    - Drawing or constructing → `sketch`.
+   - Counting on or back, time spans, change → `jumps` (open number line). Place value, ×10/÷10, trades → `pv` (`shift: true` for ×10 and ÷10).
+   - Area by counting squares → `areagrid`. Arrays and the turnaround fact → `array`. Sharing or packing → `pack`.
+   - Angles → `angle` (drag the arm; `names` for acute/obtuse/straight/reflex) or `corners` (tap a corner of a drawn shape to lay a right-angle tester on it, tap again to name it).
+   - Symmetry → `mirror` (tap a dashed line to fold the shape over it). Coordinates → `plane` (Cartesian) or `gridref` (map grid).
+   - Money → `coins` or `shop`. Combinations → `combos`. Calendars, clocks and number charts → `calendar`, `clock`, `numchart`, `cells`.
 2. **Typing (`input`, `fractions`, `pair`, `sum6`) is for the final number only**, after the students have manipulated the visual. It is never the only interaction when there is a picture to work with.
 3. **Word problems** get a `cubes` field (`ops`, optional `also` and `note`, and two `solve` methods). The teacher marks numbers, the question and key words live in class. Never pre-set the words or numbers to mark.
 4. **Open discussion questions** are the exception. Use them only when there is genuinely nothing to manipulate.
@@ -35,6 +40,7 @@ These are the teacher's decisions so far. Apply them to all new content without 
 - **Perimeter:** tap-the-sides with dimension arrows, no running total (see above).
 - **Done state:** a correct Check (or the correct multiple-choice or true/false option) marks the question done. The card plays confetti on return to the board and stays green with a Done badge. Questions with no check are done when the answer is shown.
 - **Timer** is visible on the board and inside every question.
+- **No faux bold:** the school font has one weight. School-font text is set to regular weight with `font-synthesis: none`, and answer emphasis is a soft highlight, not bold.
 - **School font:** question text uses `--f-school`, which is NSW Pre-cursive Solid when it's installed on the device, falling back to the free Google font Edu NSW ACT Foundation. Never commit the NSW font file to the public repo, because its licence isn't confirmed for web hosting.
 - **Answers:** work out and verify every answer yourself, and flag any assumption in `explain` (for example, an unlabelled length).
 - **Filing:** units go to their term and learning sequence from the scope and sequence (5 two-week sequences per term). Current mapping: Year 3 = Stage 2 A, Year 4 = Stage 2 B, Year 5 = Stage 3 A, Year 6 = Stage 3 B (`config.js`).

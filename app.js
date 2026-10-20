@@ -118,8 +118,9 @@
   }
 
   function parseNum(raw) {
-    let s = String(raw).toLowerCase().replace(/[$,%]/g, "").trim();
+    let s = String(raw).toLowerCase().replace(/[$,%°]/g, "").replace(/\u2212/g, "-").trim();
     s = s.replace(/\s*[a-zµ²³]+\.?$/i, "").trim();
+    if (/^-\s*\d/.test(s)) { const n = parseNum(s.replace(/^-\s*/, "")); return n == null ? null : -n; }
     if (/^\d{1,3}( \d{3})+(\.\d+)?$/.test(s)) s = s.replace(/ /g, "");
     let m;
     if ((m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/))) return +m[3] ? +m[1] + m[2] / m[3] : null;
@@ -208,6 +209,48 @@
     }
   };
 
+  // Safe arithmetic for typed number sentences: digits, + − × ÷, x, *, /, brackets.
+  function evalExpr(raw) {
+    const s = String(raw).replace(/[×xX]/g, "*").replace(/÷/g, "/").replace(/[−–]/g, "-").replace(/\s|,/g, "");
+    if (!/^[\d.+\-*/()]+$/.test(s)) return null;
+    let i = 0;
+    const num = () => { const m = s.slice(i).match(/^\d+(\.\d+)?/); if (!m) throw 0; i += m[0].length; return parseFloat(m[0]); };
+    const fac = () => { if (s[i] === "(") { i++; const v = add(); if (s[i++] !== ")") throw 0; return v; } if (s[i] === "-") { i++; return -fac(); } return num(); };
+    const mul = () => { let v = fac(); while (s[i] === "*" || s[i] === "/") { const o = s[i++], r = fac(); v = o === "*" ? v * r : v / r; } return v; };
+    const add = () => { let v = mul(); while (s[i] === "+" || s[i] === "-") { const o = s[i++], r = mul(); v = o === "+" ? v + r : v - r; } return v; };
+    try { const v = add(); return i === s.length && isFinite(v) ? v : null; } catch (e) { return null; }
+  }
+  // Australian English number words, for read-aloud answers.
+  function numWords(n) {
+    if (n == null) return "";
+    const ones = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+    const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+    const lt100 = (x) => (x < 20 ? ones[x] : tens[Math.floor(x / 10)] + (x % 10 ? "-" + ones[x % 10] : ""));
+    const lt1000 = (x, and) => { const h = Math.floor(x / 100), r = x % 100; return (h ? ones[h] + " hundred" + (r ? " and " : "") : (and && r ? "and " : "")) + (r ? lt100(r) : ""); };
+    if (n === 0) return "zero";
+    const parts = []; let x = Math.floor(n);
+    [[1e9, "billion"], [1e6, "million"], [1e3, "thousand"]].forEach(([v, w]) => { const k = Math.floor(x / v); if (k) { parts.push(lt1000(k) + " " + w); x %= v; } });
+    if (x) parts.push(lt1000(x, parts.length > 0 && x < 100));
+    return parts.join(", ").replace(/, and /, " and ");
+  }
+  const money = (c) => (c >= 100 ? "$" + (c / 100).toFixed(2) : c + "c");
+  const coinName = (c) => (c >= 100 ? "$" + c / 100 : c + "c");
+  // Place value columns (m = value in thousandths, so decimals stay exact).
+  const PV = {
+    M: { name: "Millions", m: 1e9 }, HTh: { name: "Hundred thousands", m: 1e8 }, TTh: { name: "Ten thousands", m: 1e7 }, Th: { name: "Thousands", m: 1e6 },
+    H: { name: "Hundreds", m: 1e5 }, T: { name: "Tens", m: 1e4 }, O: { name: "Ones", m: 1e3 }, t: { name: "Tenths", m: 100 }, h: { name: "Hundredths", m: 10 }, th: { name: "Thousandths", m: 1 }
+  };
+  function jFmt(p, v) {
+    if (p.time) { const t = ((Math.round(v) % 1440) + 1440) % 1440, hh = Math.floor(t / 60), mm = String(t % 60).padStart(2, "0"); return p.time === "24" ? String(hh).padStart(2, "0") + mm : (hh % 12 || 12) + ":" + mm + (p.ampm ? (hh >= 12 ? " pm" : " am") : ""); }
+    if (p.money) return "$" + v.toFixed(2);
+    return fmtN(v);
+  }
+  function jFmtStep(p, n) { if (p.time) return n >= 60 && n % 60 === 0 ? n / 60 + " h" : n + " min"; if (p.money) return "$" + (n % 1 ? n.toFixed(2) : n); return fmtN(n); }
+  const angleKey = (d) => (d === 90 ? "right" : d < 90 ? "less" : "greater");
+  // Stage 3 names: acute, right, obtuse, straight, reflex (a revolution at 360°).
+  const angleName = (d) => (Math.abs(d - 90) < 0.5 ? "right" : d < 90 ? "acute" : Math.abs(d - 180) < 0.5 ? "straight" : d < 180 ? "obtuse" : d >= 359.5 ? "revolution" : "reflex");
+  const angleWord = (d) => (d === 90 ? "A right angle" : d >= 179 ? "A straight angle — greater than a right angle" : d < 90 ? "Less than a right angle" : "Greater than a right angle");
+
   // ---------- interactive parts ----------
   // Each kind: html(part, preview) → markup; init(el, part) after insert; check(el, part) → {ok: true|false|null, msg}; reveal(el, part) optional.
   const W = {
@@ -288,12 +331,12 @@
         const a = [...el.querySelectorAll(".inp")], L = parseNum(a[0].value), Wd = parseNum(a[1].value);
         a.forEach((i) => i.classList.remove("ok", "no"));
         if (L == null || Wd == null) return { ok: null, msg: "Enter a length and a width." };
-        const val = p.rule === "area" ? L * Wd : 2 * (L + Wd);
+        const val = p.rule === "area" || p.rule === "product" ? L * Wd : 2 * (L + Wd);
         const excluded = (p.exclude || []).some(([x, y]) => (close(L, x) && close(Wd, y)) || (close(L, y) && close(Wd, x)));
         const ok = L > 0 && Wd > 0 && close(val, p.target) && !excluded;
         a.forEach((i) => i.classList.add(ok ? "ok" : "no"));
-        const calc = p.rule === "area" ? "Area = " + fmtN(L) + " × " + fmtN(Wd) + " = " + fmtN(val) + " " + p.unit + "²" : "Perimeter = 2 × (" + fmtN(L) + " + " + fmtN(Wd) + ") = " + fmtN(val) + " " + p.unit;
-        return { ok, msg: calc + (excluded ? ". That's the same rectangle — try different side lengths." : ok ? ". It works!" : ". It needs to be " + p.target + (p.rule === "area" ? " " + p.unit + "²." : " " + p.unit + ".")) };
+        const calc = p.rule === "product" ? fmtN(L) + " × " + fmtN(Wd) + " = " + fmtN(val) : p.rule === "area" ? "Area = " + fmtN(L) + " × " + fmtN(Wd) + " = " + fmtN(val) + " " + p.unit + "²" : "Perimeter = 2 × (" + fmtN(L) + " + " + fmtN(Wd) + ") = " + fmtN(val) + " " + p.unit;
+        return { ok, msg: calc + (excluded ? ". That's the same rectangle — try different side lengths." : ok ? ". It works!" : ". It needs to be " + p.target + (p.rule === "product" ? "." : p.rule === "area" ? " " + p.unit + "²." : " " + p.unit + ".")) };
       }
     },
     choose: {
@@ -366,8 +409,9 @@
         if (pv) return "<div class='nl-tray' style='border-style:solid'>" + chips + "</div>";
         let tr = "<div class='nl-axis'></div>";
         const span = p.max - p.min;
-        if (p.ticks) for (let i = 0; i <= p.ticks * span; i++) { const v = p.min + i / p.ticks; tr += "<i class='nl-tick" + (Math.abs(v - Math.round(v)) < 1e-9 ? " major" : "") + "' style='left:" + ((v - p.min) / span * 100) + "%'></i>"; }
-        for (let v = Math.ceil(p.min); v <= p.max; v++) tr += "<i class='nl-tick major' style='left:" + ((v - p.min) / span * 100) + "%'></i><span class='nl-lab' style='left:" + ((v - p.min) / span * 100) + "%'>" + v + "</span>";
+        if (p.ticks) for (let i = 0; i <= Math.round(p.ticks * span); i++) { const v = p.min + i / p.ticks; tr += "<i class='nl-tick' style='left:" + ((v - p.min) / span * 100) + "%'></i>"; }
+        const ls = p.labelStep || 1;
+        for (let v = Math.ceil(p.min / ls) * ls; v <= p.max + 1e-9; v += ls) tr += "<i class='nl-tick major' style='left:" + ((v - p.min) / span * 100) + "%'></i><span class='nl-lab' style='left:" + ((v - p.min) / span * 100) + "%'>" + fmtN(v) + "</span>";
         return "<div class='nl'><div class='nl-tray' data-tray>" + chips + "</div><div class='nl-track' data-track>" + tr + "</div></div>";
       },
       init(el, p) {
@@ -399,6 +443,12 @@
         if (pv) return "";
         const span = p.max - p.min;
         let tr = "<div class='nl-axis'></div>";
+        if (p.divs) {
+          for (let i = 0; i <= p.divs; i++) tr += "<i class='nl-tick" + (i % (p.majorEvery || p.divs) ? "" : " major") + "' style='left:" + (i / p.divs * 100) + "%'></i>";
+          (p.labels || [p.min, p.max]).forEach((v) => { tr += "<span class='nl-lab' style='left:" + ((v - p.min) / span * 100) + "%'>" + fmtN(v) + "</span>"; });
+          tr += "<span class='pin' data-pin style='left:4%'><b>" + esc(p.label) + "</b><i></i></span>";
+          return (p.hint ? "<p class='ph'>" + esc(p.hint) + "</p>" : "") + "<div class='nl'><div class='nl-track' data-track style='height:120px'>" + tr + "</div></div><p class='readout' data-mkread></p>";
+        }
         if (p.minor) for (let i = 0; i <= p.minor * span; i++) tr += "<i class='nl-tick minor' style='left:" + (i / (p.minor * span) * 100) + "%'></i>";
         for (let i = 0; i <= p.ticks * span; i++) tr += "<i class='nl-tick' style='left:" + (i / (p.ticks * span) * 100) + "%'></i>";
         for (let v = Math.ceil(p.min); v <= p.max; v++) tr += "<i class='nl-tick major' style='left:" + ((v - p.min) / span * 100) + "%'></i><span class='nl-lab' style='left:" + ((v - p.min) / span * 100) + "%'>" + v + "</span>";
@@ -409,7 +459,7 @@
         const track = el.querySelector("[data-track]"), pin = el.querySelector("[data-pin]");
         pin.addEventListener("pointerdown", (e) => {
           e.preventDefault(); pin.setPointerCapture(e.pointerId); pin.classList.remove("ok", "no");
-          const move = (ev) => { const r = track.getBoundingClientRect(); const f = Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)); pin.style.left = f * 100 + "%"; pin.dataset.v = p.min + f * (p.max - p.min); };
+          const move = (ev) => { const r = track.getBoundingClientRect(); const f = Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)); pin.style.left = f * 100 + "%"; pin.dataset.v = p.min + f * (p.max - p.min); const rd = el.querySelector("[data-mkread]"); if (rd && p.show) rd.textContent = p.show(+pin.dataset.v); };
           move(e);
           const up = () => { pin.removeEventListener("pointermove", move); pin.removeEventListener("pointerup", up); };
           pin.addEventListener("pointermove", move); pin.addEventListener("pointerup", up);
@@ -417,12 +467,13 @@
       },
       check(el, p) {
         const pin = el.querySelector("[data-pin]");
+        if (p.target == null) return { ok: true };
         if (pin.dataset.v == null) return { ok: null, msg: "Drag the marker to where it belongs." };
         const ok = Math.abs(+pin.dataset.v - p.target) <= p.tol;
         pin.classList.remove("ok", "no"); pin.classList.add(ok ? "ok" : "no");
-        return { ok, msg: ok ? null : "Not quite. Count the tenths and hundredths again." };
+        return { ok, msg: ok ? null : p.msg || "Not quite. Count the tenths and hundredths again." };
       },
-      reveal(el, p) { const pin = el.querySelector("[data-pin]"); pin.style.left = ((p.target - p.min) / (p.max - p.min)) * 100 + "%"; pin.dataset.v = p.target; pin.classList.add("ok"); }
+      reveal(el, p) { if (p.target == null) return; const pin = el.querySelector("[data-pin]"); pin.style.left = ((p.target - p.min) / (p.max - p.min)) * 100 + "%"; pin.dataset.v = p.target; pin.classList.add("ok"); }
     },
     balance: {
       html(p, pv) {
@@ -479,6 +530,634 @@
         upd();
       },
       check(el, p) { const n = el.querySelector("[data-stack]").children.length; return { ok: n === p.target, msg: n === p.target ? "6 sixths make one whole jug!" : n + " parts is " + (n < p.target ? "not enough" : "too many") + " for a whole." }; }
+    },
+    // Open number line: the teacher adds jumps to model counting on or back. Landing points are shown, the total of the jumps is not.
+    jumps: {
+      html(p, pv) {
+        if (pv) return "";
+        const steps = p.steps || [1, 10, 100];
+        const btns = steps.map((n) => "<button class='btn jl-step' data-step='" + n + "'>+" + jFmtStep(p, n) + "</button>").join("") +
+          (p.back ? steps.map((n) => "<button class='btn jl-step' data-step='" + -n + "'>−" + jFmtStep(p, n) + "</button>").join("") : "");
+        return "<p class='ph'>" + esc(p.hint || "Add jumps to count on" + (p.back ? " or back" : "") + ". Each jump shows where you land.") + "</p>" +
+          "<div class='jl'><div class='jl-track' data-track></div></div>" +
+          "<div class='checkrow jl-tools'>" + btns + "<label class='field'><span class='unit'>Jump by</span><input class='inp jl-custom' inputmode='decimal' autocomplete='off' aria-label='Jump size'></label><button class='btn' data-jgo>Jump</button><button class='btn' data-jundo>Undo</button><button class='btn' data-jclear>Clear</button></div>";
+      },
+      init(el, p) {
+        el._pts = [p.start];
+        const draw = () => {
+          const pts = el._pts, track = el.querySelector("[data-track]");
+          let lo = Math.min(p.start, p.end ?? p.start, ...pts), hi = Math.max(p.start, p.end ?? p.start, ...pts);
+          if (p.min != null) lo = Math.min(lo, p.min); if (p.max != null) hi = Math.max(hi, p.max);
+          const pad = (hi - lo || 10) * 0.06; lo -= pad; hi += pad;
+          const X = (v) => ((v - lo) / (hi - lo)) * 100;
+          let h = "<div class='jl-axis'></div>";
+          const mark = (v, cls, row) => "<i class='jl-tick " + cls + "' style='left:" + X(v) + "%'></i><span class='jl-lab " + cls + (row ? " r" + row : "") + "' style='left:" + X(v) + "%'>" + esc(jFmt(p, v)) + "</span>";
+          h += mark(p.start, "start", 0);
+          if (p.end != null) h += mark(p.end, "end", 0);
+          for (let i = 1; i < pts.length; i++) {
+            const a = pts[i - 1], b = pts[i], l = Math.min(X(a), X(b)), w = Math.abs(X(b) - X(a));
+            h += "<span class='jl-arc" + (b < a ? " back" : "") + "' style='left:" + l + "%;width:" + w + "%;height:" + Math.max(22, Math.min(80, w * 3)) + "px'><b>" + (b < a ? "−" : "+") + esc(jFmtStep(p, Math.abs(b - a))) + "</b></span>";
+            if (!(p.end != null && Math.abs(b - p.end) < 1e-9)) h += mark(b, "land", i % 2 ? 1 : 2);
+          }
+          track.innerHTML = h;
+        };
+        const jump = (n) => { if (!isFinite(n) || !n) return; const last = el._pts[el._pts.length - 1]; el._pts.push(Math.round((last + n) * 1000) / 1000); draw(); };
+        el.addEventListener("click", (e) => {
+          const b = e.target.closest(".jl-step"); if (b) { jump(+b.dataset.step); return; }
+          if (e.target.closest("[data-jgo]")) { const v = parseNum(el.querySelector(".jl-custom").value.replace(/^-/, "")); const neg = /^\s*-/.test(el.querySelector(".jl-custom").value); jump(v == null ? NaN : neg ? -v : v); return; }
+          if (e.target.closest("[data-jundo]")) { if (el._pts.length > 1) el._pts.pop(); draw(); return; }
+          if (e.target.closest("[data-jclear]")) { el._pts = [p.start]; draw(); }
+        });
+        el.querySelector(".jl-custom").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); el.querySelector("[data-jgo]").click(); } });
+        draw();
+      }
+    },
+    // Coin purse: tap coins in to make an amount; save each combination found.
+    coins: {
+      html(p, pv) {
+        if (pv) return "";
+        const set = p.coins || [5, 10, 20, 50, 100, 200];
+        return "<p class='ph'>" + esc(p.hint || "Tap coins to put them in the purse. Tap a coin in the purse to take it out.") + "</p>" +
+          "<div class='cn-bank'>" + set.map((c) => "<button class='cn" + (c >= 100 ? " gold" : "") + "' data-coin='" + c + "' aria-label='" + coinName(c) + "'>" + coinName(c) + "</button>").join("") + "</div>" +
+          "<div class='cn-purse' data-purse></div><p class='readout' data-cnread></p>" +
+          (p.target ? "<div class='checkrow'><button class='btn' data-cnsave>Save this combination</button></div><ol class='cn-saved' data-saved></ol>" : "");
+      },
+      init(el, p) {
+        el._p = []; el._saved = [];
+        const upd = () => {
+          el.querySelector("[data-purse]").innerHTML = el._p.length ? el._p.map((c, i) => "<button class='cn" + (c >= 100 ? " gold" : "") + "' data-out='" + i + "'>" + coinName(c) + "</button>").join("") : "<span class='ph'>The purse is empty.</span>";
+          const t = el._p.reduce((a, b) => a + b, 0);
+          el.querySelector("[data-cnread]").textContent = el._p.length + " coin" + (el._p.length === 1 ? "" : "s") + (p.showTotal === false ? "" : " · total " + money(t));
+          const sv = el.querySelector("[data-saved]"); if (sv) sv.innerHTML = el._saved.map((c) => "<li>" + c.map(coinName).join(" + ") + "</li>").join("");
+        };
+        el.addEventListener("click", (e) => {
+          const a = e.target.closest("[data-coin]"); if (a) { if (el._p.length < 12) el._p.push(+a.dataset.coin); el._p.sort((x, y) => y - x); upd(); return; }
+          const o = e.target.closest("[data-out]"); if (o) { el._p.splice(+o.dataset.out, 1); upd(); return; }
+          if (e.target.closest("[data-cnsave]")) {
+            const r = W.coins.check(el, p); const fb = el.querySelector("[data-cnread]");
+            if (!r.ok) { fb.textContent = r.msg; return; }
+            const key = el._p.join(","); if (!el._saved.some((s) => s.join(",") === key)) el._saved.push(el._p.slice());
+            el._p = []; upd();
+          }
+        });
+        upd();
+      },
+      check(el, p) {
+        const cur = el._p.length ? el._p : el._saved[el._saved.length - 1] || [];
+        if (!cur.length) return { ok: null, msg: "Put some coins in the purse first." };
+        const t = cur.reduce((a, b) => a + b, 0);
+        if (p.count && cur.length !== p.count) return { ok: false, msg: "Use exactly " + p.count + " coins." };
+        if (p.target && t !== p.target) return { ok: false, msg: "That makes " + money(t) + ". It needs to make " + money(p.target) + "." };
+        return { ok: true, msg: cur.map(coinName).join(" + ") + " = " + money(t) + (el._saved.length > 1 ? ". " + el._saved.length + " combinations found." : "") };
+      }
+    },
+    // Combinations: build a selection, save it; duplicates (in any order) are spotted.
+    combos: {
+      html(p, pv) {
+        if (pv) return "";
+        return "<p class='ph'>Tap " + p.pick + " to make a combination, then save it.</p><div class='cb-bank'>" + p.items.map((it, i) => "<button class='cb-i' data-ci='" + i + "' style='--k:" + it[1] + "'>" + esc(it[0]) + "</button>").join("") + "</div>" +
+          "<div class='cb-cur' data-cur></div><div class='checkrow'><button class='btn' data-cbsave>Save combination</button><button class='btn' data-cbclear>Clear</button></div><p class='readout' data-cbread></p><div class='cb-list' data-cblist></div>";
+      },
+      init(el, p) {
+        el._cur = []; el._found = [];
+        const chip = (i) => "<span class='cb-dot' style='--k:" + p.items[i][1] + "'>" + esc(p.items[i][0]) + "</span>";
+        const upd = (msg) => {
+          el.querySelector("[data-cur]").innerHTML = el._cur.map(chip).join("") || "<span class='ph'>Choose " + p.pick + "…</span>";
+          el.querySelector("[data-cblist]").innerHTML = el._found.map((c) => "<div class='cb-row'>" + c.map(chip).join("") + "</div>").join("");
+          el.querySelector("[data-cbread]").textContent = msg || el._found.length + " combination" + (el._found.length === 1 ? "" : "s") + " found";
+        };
+        el.addEventListener("click", (e) => {
+          const b = e.target.closest("[data-ci]");
+          if (b) { const i = +b.dataset.ci, used = el._cur.filter((x) => x === i).length; if (el._cur.length < p.pick && used < (p.items[i][2] || p.pick)) el._cur.push(i); upd(); return; }
+          if (e.target.closest("[data-cbclear]")) { el._cur = []; upd(); return; }
+          if (e.target.closest("[data-cbsave]")) {
+            if (el._cur.length < p.pick) { upd("Choose " + p.pick + " first."); return; }
+            const key = el._cur.slice().sort().join(","); if (el._found.some((c) => c.slice().sort().join(",") === key)) { el._cur = []; upd("You already have that one — order doesn't matter."); return; }
+            el._found.push(el._cur.slice().sort()); el._cur = []; upd();
+          }
+        });
+        upd();
+      },
+      check(el, p) {
+        if (!el._found.length) return { ok: null, msg: "Save some combinations first." };
+        const ok = el._found.length === p.total;
+        return { ok, msg: ok ? "All " + p.total + " combinations found!" : el._found.length + " found so far. There are more." };
+      }
+    },
+    // Grid map: tap a square to see its grid reference.
+    gridref: {
+      html(p, pv) {
+        let h = "<div class='gr'><img src='" + p.src + "' alt='" + esc(p.alt || "Grid map") + "'><div class='gr-grid' style='left:" + p.box[0] + "%;top:" + p.box[1] + "%;width:" + (p.box[2] - p.box[0]) + "%;height:" + (p.box[3] - p.box[1]) + "%;grid-template-columns:repeat(" + p.cols.length + ",1fr);grid-template-rows:repeat(" + p.rows.length + ",1fr)'>";
+        p.rows.forEach((r) => p.cols.forEach((c) => { h += "<button class='gr-c' data-ref='" + c + r + "'" + (pv ? " disabled" : "") + " aria-label='" + c + r + "'></button>"; }));
+        return h + "</div></div>" + (pv ? "" : "<p class='readout' data-grread>Tap a square to see its grid reference.</p>");
+      },
+      init(el) { el.addEventListener("click", (e) => { const b = e.target.closest(".gr-c"); if (!b) return; el.querySelectorAll(".gr-c").forEach((x) => x.classList.toggle("on", x === b)); el.querySelector("[data-grread]").textContent = "Grid reference: " + b.dataset.ref; }); }
+    },
+    // Corner tester: tap a corner to lay a right-angle tester on it, tap again to name the angle.
+    corners: {
+      html(p, pv) {
+        let svg = "<svg viewBox='0 0 " + p.view[0] + " " + p.view[1] + "' class='co' role='img' aria-label='" + esc(p.label || "Shapes with corners to test") + "'>";
+        p.shapes.forEach((sh, si) => {
+          svg += "<polygon points='" + sh.p.map((q) => q.join(",")).join(" ") + "' fill='" + (sh.fill || "#0B2A6B") + "' class='co-shape'/>";
+          if (sh.l) { const cx = sh.p.reduce((a, q) => a + q[0], 0) / sh.p.length, cy = sh.p.reduce((a, q) => a + q[1], 0) / sh.p.length; svg += "<text x='" + (sh.lx ?? cx) + "' y='" + (sh.ly ?? cy) + "' class='co-name'>" + esc(sh.l) + "</text>"; }
+          svg += "<g data-cog='" + si + "'></g>";
+          (sh.marks || sh.p.map((_, v) => ({ v }))).forEach((m, mi) => {
+            const [x, y] = sh.p[m.v];
+            if (m.l) { const g = W.corners.geo(sh, m); svg += "<text x='" + (x + Math.cos(g.mid) * (g.r + 18)) + "' y='" + (y + Math.sin(g.mid) * (g.r + 18)) + "' class='co-lab'>" + esc(m.l) + "</text>"; }
+            svg += "<circle class='co-hit' cx='" + x + "' cy='" + y + "' r='" + (p.hit || 18) + "' data-co='" + si + "-" + mi + "'" + (pv ? " style='pointer-events:none'" : "") + "/>";
+          });
+        });
+        svg += "</svg>";
+        return (pv ? "" : "<p class='ph'>" + esc(p.hint || "Tap a corner to test it with a right angle. Tap again to name the angle.") + "</p>") + "<div class='co-pic'>" + svg + "</div>" + (pv ? "" : "<p class='readout' data-coread></p>");
+      },
+      // Interior angle at a vertex (or the outside angle when m.ext), found by testing which side is inside.
+      geo(sh, m) {
+        const P = sh.p, n = P.length, V = P[m.v], A = P[(m.v + n - 1) % n], B = P[(m.v + 1) % n];
+        const a1 = Math.atan2(A[1] - V[1], A[0] - V[0]), a2 = Math.atan2(B[1] - V[1], B[0] - V[0]);
+        let d = (a2 - a1 + 4 * Math.PI) % (2 * Math.PI);
+        const inside = (x, y) => { let c = false; for (let i = 0, j = n - 1; i < n; j = i++) { const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
+        const mid = a1 + d / 2, ins = inside(V[0] + 6 * Math.cos(mid), V[1] + 6 * Math.sin(mid));
+        let s = 1; if (ins === !!m.ext) { d = 2 * Math.PI - d; s = -1; }
+        const r = m.r || Math.max(14, Math.min(30, 0.3 * Math.min(Math.hypot(A[0] - V[0], A[1] - V[1]), Math.hypot(B[0] - V[0], B[1] - V[1]))));
+        return { V, a1, s, th: d, deg: (d * 180) / Math.PI, mid: a1 + (s * d) / 2, r };
+      },
+      init(el, p) {
+        el._st = {};
+        const draw = (si) => {
+          const sh = p.shapes[si], g = el.querySelector("[data-cog='" + si + "']"); let h = "";
+          (sh.marks || sh.p.map((_, v) => ({ v }))).forEach((m, mi) => {
+            const st = el._st[si + "-" + mi] || 0; if (!st) return;
+            const G = W.corners.geo(sh, m), [x, y] = G.V, e = G.a1 + G.s * G.th, r = G.r;
+            const P = (a, R) => (x + R * Math.cos(a)).toFixed(1) + " " + (y + R * Math.sin(a)).toFixed(1);
+            const q = p.q || 34, u = G.a1, w = G.a1 + G.s * Math.PI / 2;
+            h += "<path class='co-sq' d='M " + x + " " + y + " L " + P(u, q) + " L " + (x + q * Math.cos(u) + q * Math.cos(w)).toFixed(1) + " " + (y + q * Math.sin(u) + q * Math.sin(w)).toFixed(1) + " L " + P(w, q) + " Z'/>";
+            if (st === 2) h += Math.abs(G.deg - 90) < 0.5 ? "<path class='co-arc' d='M " + P(u, 14) + " L " + (x + 14 * Math.cos(u) + 14 * Math.cos(w)).toFixed(1) + " " + (y + 14 * Math.sin(u) + 14 * Math.sin(w)).toFixed(1) + " L " + P(w, 14) + "' fill='none'/>"
+              : "<path class='co-arc' d='M " + x + " " + y + " L " + P(u, r) + " A " + r + " " + r + " 0 " + (G.th > Math.PI ? 1 : 0) + " " + (G.s > 0 ? 1 : 0) + " " + P(e, r) + " Z'/>";
+          });
+          g.innerHTML = h;
+        };
+        const read = () => {
+          const out = [];
+          p.shapes.forEach((sh, si) => (sh.marks || sh.p.map((_, v) => ({ v }))).forEach((m, mi) => {
+            if (el._st[si + "-" + mi] !== 2) return; const G = W.corners.geo(sh, m), nm = angleName(G.deg);
+            out.push((m.l || sh.l || "") + (m.l || sh.l ? ": " : "") + nm + (p.deg ? " (" + Math.round(G.deg) + "°)" : ""));
+          }));
+          el.querySelector("[data-coread]").textContent = out.join(" · ");
+        };
+        el.addEventListener("click", (e) => {
+          const c = e.target.closest("[data-co]"); if (!c) return;
+          const k = c.dataset.co; el._st[k] = ((el._st[k] || 0) + 1) % 3; draw(+k.split("-")[0]); read();
+        });
+      }
+    },
+    // Cartesian plane: tap a point to drop guide lines to both axes; tap a grid point to plot it.
+    plane: {
+      html(p, pv) {
+        const [x0, x1, y0, y1] = p.range || [-6, 6, -6, 6], c = 30, pad = 26, W_ = (x1 - x0) * c + 2 * pad, H = (y1 - y0) * c + 2 * pad;
+        const X = (x) => pad + (x - x0) * c, Y = (y) => pad + (y1 - y) * c;
+        let s = "<svg viewBox='0 0 " + W_ + " " + H + "' class='pl' role='img' aria-label='Cartesian plane'>";
+        for (let x = x0; x <= x1; x++) s += "<line class='pl-g' x1='" + X(x) + "' y1='" + Y(y0) + "' x2='" + X(x) + "' y2='" + Y(y1) + "'/>";
+        for (let y = y0; y <= y1; y++) s += "<line class='pl-g' x1='" + X(x0) + "' y1='" + Y(y) + "' x2='" + X(x1) + "' y2='" + Y(y) + "'/>";
+        s += "<line class='pl-ax' x1='" + X(x0) + "' y1='" + Y(0) + "' x2='" + X(x1) + "' y2='" + Y(0) + "'/><line class='pl-ax' x1='" + X(0) + "' y1='" + Y(y0) + "' x2='" + X(0) + "' y2='" + Y(y1) + "'/>";
+        for (let x = x0; x <= x1; x++) if (x) s += "<text class='pl-n' data-xn='" + x + "' x='" + X(x) + "' y='" + (Y(0) + 17) + "'>" + (x < 0 ? "−" + -x : x) + "</text>";
+        for (let y = y0; y <= y1; y++) if (y) s += "<text class='pl-n' data-yn='" + y + "' x='" + (X(0) - 12) + "' y='" + (Y(y) + 5) + "'>" + (y < 0 ? "−" + -y : y) + "</text>";
+        s += "<text class='pl-n' x='" + (X(0) - 10) + "' y='" + (Y(0) + 17) + "'>0</text><text class='pl-axl' x='" + (X(x1) + 12) + "' y='" + (Y(0) + 5) + "'>x</text><text class='pl-axl' x='" + X(0) + "' y='" + (Y(y1) - 10) + "'>y</text>";
+        s += "<g data-plg></g>";
+        if (!pv) for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) s += "<circle class='pl-hit' cx='" + X(x) + "' cy='" + Y(y) + "' r='11' data-pt='" + x + "," + y + "'/>";
+        (p.points || []).forEach((q, i) => { s += "<circle class='pl-pt' cx='" + X(q.x) + "' cy='" + Y(q.y) + "' r='8' data-pp='" + i + "'/><text class='pl-pl' x='" + (X(q.x) + 12) + "' y='" + (Y(q.y) - 10) + "'>" + esc(q.l) + "</text>"; });
+        return (pv ? "" : "<p class='ph'>" + esc(p.hint || "Tap a point to trace it back to each axis. Tap any grid point to plot it.") + "</p>") + "<div class='pl-pic'>" + s + "</svg></div>" + (pv ? "" : "<div class='checkrow'><button class='btn' data-plclear>Clear</button></div><p class='readout' data-plread></p>");
+      },
+      init(el, p) {
+        const [x0, , , y1] = p.range || [-6, 6, -6, 6], c = 30, pad = 26, X = (x) => pad + (x - x0) * c, Y = (y) => pad + (y1 - y) * c;
+        el._g = new Set(); el._d = new Set();
+        const draw = () => {
+          let h = "";
+          el._g.forEach((i) => { const q = p.points[i]; h += "<path class='pl-guide' d='M " + X(q.x) + " " + Y(q.y) + " L " + X(q.x) + " " + Y(0) + " M " + X(q.x) + " " + Y(q.y) + " L " + X(0) + " " + Y(q.y) + "'/>"; });
+          el._d.forEach((k) => { const [x, y] = k.split(",").map(Number); h += "<circle class='pl-dot' cx='" + X(x) + "' cy='" + Y(y) + "' r='6'/><text class='pl-dl' x='" + (X(x) + 9) + "' y='" + (Y(y) + 20) + "'>(" + x + ", " + y + ")</text>"; });
+          el.querySelector("[data-plg]").innerHTML = h;
+          el.querySelectorAll("[data-xn],[data-yn]").forEach((t) => t.classList.remove("on"));
+          el._g.forEach((i) => { const q = p.points[i]; el.querySelector("[data-xn='" + q.x + "']")?.classList.add("on"); el.querySelector("[data-yn='" + q.y + "']")?.classList.add("on"); });
+          el.querySelector("[data-plread]").textContent = el._g.size ? "Go across the x-axis first, then up or down the y-axis." : "";
+        };
+        el.addEventListener("click", (e) => {
+          const t = e.target.closest("[data-pt]"); if (e.target.closest("[data-plclear]")) { el._g.clear(); el._d.clear(); draw(); return; }
+          if (!t) return;
+          const [x, y] = t.dataset.pt.split(",").map(Number), i = (p.points || []).findIndex((q) => q.x === x && q.y === y);
+          if (i >= 0) el._g.has(i) ? el._g.delete(i) : el._g.add(i); else el._d.has(t.dataset.pt) ? el._d.delete(t.dataset.pt) : el._d.add(t.dataset.pt);
+          draw();
+        });
+      }
+    },
+    // Mirror lines: tap a dashed line to reflect the shape in it. A true line of symmetry lands on itself.
+    mirror: {
+      html(p, pv) {
+        let s = "<svg viewBox='0 0 " + p.view[0] + " " + p.view[1] + "' class='mr' role='img' aria-label='" + esc(p.label || "Shapes with lines to test for symmetry") + "'>";
+        p.shapes.forEach((sh, si) => {
+          s += "<polygon points='" + sh.p.map((q) => q.join(",")).join(" ") + "' class='mr-shape' fill='" + (sh.fill || "#0B2A6B") + "'/><g data-mrg='" + si + "'></g>";
+          if (sh.l) s += "<text class='co-name' x='" + (sh.lx ?? sh.p.reduce((a, q) => a + q[0], 0) / sh.p.length) + "' y='" + (sh.ly ?? sh.p.reduce((a, q) => a + q[1], 0) / sh.p.length) + "'>" + esc(sh.l) + "</text>";
+          (sh.lines || []).forEach((L, li) => { const seg = "x1='" + L[0] + "' y1='" + L[1] + "' x2='" + L[2] + "' y2='" + L[3] + "'"; s += "<g class='mr-l' data-ml='" + si + "-" + li + "'><line " + seg + " class='mr-hit'/><line " + seg + " class='mr-line'/></g>"; });
+        });
+        return (pv ? "" : "<p class='ph'>" + esc(p.hint || "Predict first. Then tap a dashed line to fold the shape over it.") + "</p>") + "<div class='mr-pic'>" + s + "</svg></div>" + (pv ? "" : "<p class='readout' data-mrread></p>");
+      },
+      init(el, p) {
+        el._on = {};
+        const refl = ([x, y], [ax, ay, bx, by]) => { const dx = bx - ax, dy = by - ay, t = ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy), fx = ax + t * dx, fy = ay + t * dy; return [2 * fx - x, 2 * fy - y]; };
+        const upd = () => {
+          const out = [];
+          p.shapes.forEach((sh, si) => {
+            let h = "", found = 0;
+            (sh.lines || []).forEach((L, li) => {
+              const g = el.querySelector("[data-ml='" + si + "-" + li + "']"), on = el._on[si + "-" + li];
+              const R = sh.p.map((q) => refl(q, L)), ok = R.every((r) => sh.p.some((q) => Math.hypot(q[0] - r[0], q[1] - r[1]) < 1.5));
+              g.classList.toggle("yes", !!on && ok); g.classList.toggle("no", !!on && !ok);
+              if (on) { h += "<polygon class='mr-ghost" + (ok ? " yes" : "") + "' points='" + R.map((q) => q.map((v) => v.toFixed(1)).join(",")).join(" ") + "'/>"; if (ok) found++; }
+            });
+            el.querySelector("[data-mrg='" + si + "']").innerHTML = h;
+            if (Object.keys(el._on).some((k) => el._on[k] && k.startsWith(si + "-"))) out.push((sh.l ? sh.l + ": " : "") + found + " line" + (found === 1 ? "" : "s") + " of symmetry found");
+          });
+          el.querySelector("[data-mrread]").textContent = out.join(" · ");
+        };
+        el.addEventListener("click", (e) => { const g = e.target.closest("[data-ml]"); if (!g) return; el._on[g.dataset.ml] = !el._on[g.dataset.ml]; upd(); });
+      }
+    },
+    // Pack (fill groups of a set size) or share (deal one to each group in turn), with the leftovers shown.
+    pack: {
+      html(p, pv) {
+        if (pv) return "";
+        const btn = p.mode === "share" ? "Deal one to each " + p.label : "Fill a " + p.label + " with " + p.size;
+        return "<p class='ph'>" + esc(p.hint || (p.mode === "share" ? "Share the " + p.thing + " out one at a time." : "Put " + p.size + " " + p.thing + " in each " + p.label + ".")) + "</p>" +
+          "<div class='pk-pool' data-pool></div><div class='pk-groups' data-groups></div>" +
+          "<div class='checkrow'><button class='btn primary-soft' data-pkgo>" + esc(btn) + "</button>" + (p.mode === "share" ? "" : "<button class='btn' data-pkrest>Put the rest in a " + esc(p.label) + "</button>") + "<button class='btn' data-pkundo>Undo</button></div>";
+      },
+      init(el, p) {
+        const groups = p.mode === "share" ? Array.from({ length: p.n }, () => 0) : [];
+        el._g = groups; el._hist = [];
+        const icon = "<i class='pk-c'></i>";
+        const upd = () => {
+          const used = el._g.reduce((a, b) => a + b, 0), left = p.total - used;
+          el._left = left;
+          el.querySelector("[data-pool]").innerHTML = "<span>" + left + " " + esc(p.thing) + " left</span><div>" + icon.repeat(left) + "</div>";
+          el.querySelector("[data-groups]").innerHTML = el._g.map((n, i) => "<div class='pk-g'><b>" + esc(p.label) + " " + (i + 1) + "</b><div>" + icon.repeat(n) + "</div></div>").join("") || "<p class='ph'>No " + esc(p.label) + "s yet.</p>";
+        };
+        el.addEventListener("click", (e) => {
+          const left = el._left;
+          if (e.target.closest("[data-pkgo]")) {
+            if (p.mode === "share") { if (left <= 0) return; el._hist.push(el._g.slice()); let k = left; for (let i = 0; i < el._g.length && k > 0; i++, k--) el._g[i]++; }
+            else { if (left < p.size) return; el._hist.push(el._g.slice()); el._g.push(p.size); }
+            upd();
+          }
+          if (e.target.closest("[data-pkrest]") && left > 0) { el._hist.push(el._g.slice()); el._g.push(left); upd(); }
+          if (e.target.closest("[data-pkundo]") && el._hist.length) { el._g = el._hist.pop(); upd(); }
+        });
+        upd();
+      }
+    },
+    // Array builder: change rows and columns; rotate to show the turnaround fact.
+    array: {
+      html(p, pv) {
+        return (pv ? "" : "<p class='ph'>" + esc(p.hint || "Change the rows and columns to build the array.") + "</p>") + "<div class='ar-wrap'><div class='ar' data-ar></div></div>" +
+          (pv ? "" : "<div class='checkrow ar-ctl'><span class='unit'>Rows</span><button class='btn' data-ar='r-'>−</button><button class='btn' data-ar='r+'>+</button>" +
+            (p.fixCols ? "" : "<span class='unit'>Columns</span><button class='btn' data-ar='c-'>−</button><button class='btn' data-ar='c+'>+</button>") +
+            "<button class='btn' data-ar='rot'>Rotate</button></div><p class='readout' data-arread></p>");
+      },
+      init(el, p) {
+        el._r = p.rows || 1; el._c = p.cols || 1;
+        const upd = () => {
+          const g = el.querySelector("[data-ar]"); g.style.gridTemplateColumns = "repeat(" + el._c + ", 26px)";
+          g.innerHTML = "<i></i>".repeat(el._r * el._c);
+          const rd = el.querySelector("[data-arread]"); if (rd) rd.textContent = el._r + " row" + (el._r > 1 ? "s" : "") + " of " + el._c + (p.showTotal ? " = " + el._r * el._c : "");
+        };
+        el._upd = upd;
+        el.addEventListener("click", (e) => {
+          const b = e.target.closest("button[data-ar]"); if (!b) return;
+          const a = b.dataset.ar, mx = p.max || 12;
+          if (a === "r+" && el._r < mx) el._r++; if (a === "r-" && el._r > 1) el._r--;
+          if (a === "c+" && el._c < mx) el._c++; if (a === "c-" && el._c > 1) el._c--;
+          if (a === "rot" && !p.fixCols) [el._r, el._c] = [el._c, el._r];
+          upd();
+        });
+        upd();
+      },
+      check(el, p) {
+        if (p.target) { const ok = el._r === p.target[0] && el._c === p.target[1]; return { ok, msg: ok ? null : "This array is " + el._r + " rows of " + el._c + ". It needs " + p.target[0] + " rows of " + p.target[1] + "." }; }
+        if (p.total) { const ok = el._r * el._c === p.total; return { ok, msg: ok ? el._r + " rows of " + el._c + " makes " + p.total + "." : "This array has " + el._r * el._c + ". It needs " + p.total + "." }; }
+        return { ok: true };
+      },
+      reveal(el, p) { if (p.target) { el._r = p.target[0]; el._c = p.target[1]; el._upd(); } }
+    },
+    // Calendar: tap days to count them.
+    calendar: {
+      html(p, pv) {
+        if (pv) return "";
+        const DOW = ["S", "M", "T", "W", "T", "F", "S"];
+        return "<p class='ph'>" + esc(p.hint || "Tap each day as you count.") + "</p><div class='cal-wrap'>" + p.months.map((m, mi) => {
+          let h = "<div class='cal'><b>" + esc(m.name) + "</b><div class='cal-g'>" + DOW.map((d) => "<span class='cal-h'>" + d + "</span>").join("") + "<span></span>".repeat(m.start);
+          for (let d = 1; d <= m.days; d++) h += "<button class='cal-d" + ((m.mark || []).includes(d) ? " mark" : "") + "' data-d='" + mi + "-" + d + "'>" + d + "</button>";
+          return h + "</div></div>";
+        }).join("") + "</div><p class='readout' data-calread>0 days counted</p>";
+      },
+      init(el) {
+        el.addEventListener("click", (e) => { const b = e.target.closest(".cal-d"); if (!b) return; b.classList.toggle("on"); const n = el.querySelectorAll(".cal-d.on").length; el.querySelector("[data-calread]").textContent = n + " day" + (n === 1 ? "" : "s") + " counted"; });
+      }
+    },
+    // Analogue clock showing a time; optionally the minute hand can be dragged (the hour hand follows).
+    clock: {
+      html(p) {
+        let h = "<div class='clk-w'><svg viewBox='0 0 220 220' class='clk' role='img' aria-label='Analogue clock'><circle cx='110' cy='110' r='100' class='clk-f'/>";
+        for (let i = 0; i < 60; i++) { const a = (i * 6 * Math.PI) / 180, r1 = i % 5 ? 92 : 86; h += "<line x1='" + (110 + r1 * Math.sin(a)) + "' y1='" + (110 - r1 * Math.cos(a)) + "' x2='" + (110 + 98 * Math.sin(a)) + "' y2='" + (110 - 98 * Math.cos(a)) + "' class='clk-t" + (i % 5 ? "" : " big") + "'/>"; }
+        for (let n = 1; n <= 12; n++) { const a = (n * 30 * Math.PI) / 180; h += "<text x='" + (110 + 72 * Math.sin(a)) + "' y='" + (110 - 72 * Math.cos(a) + 7) + "' class='clk-n'>" + n + "</text>"; }
+        return h + "<line class='clk-hh' x1='110' y1='110' x2='110' y2='60'/><line class='clk-mh' x1='110' y1='110' x2='110' y2='30'/><circle cx='110' cy='110' r='6' class='clk-c'/></svg></div>" + (p.drag ? "<p class='ph'>Drag the long hand to move the time.</p>" : "");
+      },
+      init(el, p) {
+        const svg = el.querySelector("svg"), hh = svg.querySelector(".clk-hh"), mh = svg.querySelector(".clk-mh");
+        const set = (mins) => { el._m = ((mins % 720) + 720) % 720; const ma = (el._m % 60) * 6, ha = (el._m / 60) * 30;
+          const pt = (a, r) => [110 + r * Math.sin((a * Math.PI) / 180), 110 - r * Math.cos((a * Math.PI) / 180)];
+          const [mx, my] = pt(ma, 80), [hx, hy] = pt(ha, 52); mh.setAttribute("x2", mx); mh.setAttribute("y2", my); hh.setAttribute("x2", hx); hh.setAttribute("y2", hy); };
+        const [H, M] = String(p.time || "12:00").split(":").map(Number); set((H % 12) * 60 + M);
+        if (p.drag) {
+          let last = null;
+          svg.addEventListener("pointerdown", (e) => {
+            e.preventDefault(); svg.setPointerCapture(e.pointerId);
+            const mv = (ev) => { const r = svg.getBoundingClientRect(), x = ev.clientX - r.left - r.width / 2, y = ev.clientY - r.top - r.height / 2; let a = (Math.atan2(x, -y) * 180) / Math.PI; if (a < 0) a += 360; const m = Math.round(a / 6) % 60; let base = Math.floor(el._m / 60) * 60; if (last != null) { if (last > 45 && m < 15) base += 60; if (last < 15 && m > 45) base -= 60; } last = m; set(base + m); };
+            mv(e); const up = () => { svg.removeEventListener("pointermove", mv); svg.removeEventListener("pointerup", up); last = null; };
+            svg.addEventListener("pointermove", mv); svg.addEventListener("pointerup", up);
+          });
+        }
+      }
+    },
+    // Number chart puzzle: a piece of a hundred chart with some numbers missing.
+    cells: {
+      html(p, pv) {
+        let h = "<div class='cells' style='grid-template-columns:repeat(" + p.cols + ", " + (p.w || 64) + "px)'>"; let k = 0;
+        p.grid.forEach((row) => row.forEach((c) => {
+          if (c === null) h += "<span></span>";
+          else if (typeof c === "number") h += "<span class='cell given'>" + c + "</span>";
+          else if (typeof c === "string") h += "<span class='cell given" + (c.startsWith("#") ? " head" : "") + "'>" + fmt(c.replace(/^#/, "")) + "</span>";
+          else h += "<input class='inp cell' data-f='" + k++ + "' inputmode='numeric' autocomplete='off' aria-label='Missing number'" + (pv ? " disabled" : "") + ">";
+        }));
+        return h + "</div>";
+      },
+      check(el, p) {
+        const want = []; p.grid.forEach((row) => row.forEach((c) => { if (c && typeof c === "object") want.push(c.v); }));
+        let all = true, filled = true;
+        el.querySelectorAll("input.cell").forEach((inp, i) => { inp.classList.remove("ok", "no"); if (!inp.value.trim()) { filled = false; return; } const n = parseNum(inp.value), ok = n != null && close(n, want[i]); inp.classList.add(ok ? "ok" : "no"); if (!ok) all = false; });
+        return filled ? { ok: all, msg: all ? null : p.msg || "Remember: down a row adds 10, across adds 1." } : { ok: null, msg: "Fill in every box first." };
+      }
+    },
+    // Quarter turns: turn the shape and build the repeating pattern.
+    turns: {
+      html(p, pv) {
+        if (pv) return "";
+        return "<div class='tn-row' data-tn></div><div class='checkrow'><button class='btn' data-tngo>" + esc(p.button || "Quarter turn clockwise") + "</button><button class='btn' data-tnclear>Start again</button></div>";
+      },
+      init(el, p) {
+        const arrow = "<svg viewBox='0 0 100 100' class='tn-s'><polygon points='50,8 88,50 64,50 64,92 36,92 36,50 12,50' /></svg>";
+        el._k = [0];
+        const upd = () => { el.querySelector("[data-tn]").innerHTML = el._k.map((d) => "<span class='tn-i' style='transform:rotate(" + d + "deg)'>" + arrow + "</span>").join(""); };
+        el.addEventListener("click", (e) => {
+          if (e.target.closest("[data-tngo]") && el._k.length < 12) { el._k.push(el._k[el._k.length - 1] + (p.step || 90)); upd(); }
+          if (e.target.closest("[data-tnclear]")) { el._k = [0]; upd(); }
+        });
+        upd();
+      }
+    },
+    // Tap to reveal: the class answers aloud first, then the teacher reveals each answer.
+    reveal: {
+      html(p, pv) {
+        return "<div class='rv'>" + p.items.map((it, i) => "<div class='rv-i'><span class='rv-q'>" + fmt(it[0]) + "</span>" +
+          (pv ? "" : "<button class='btn rv-b' data-rv='" + i + "'>" + esc(p.button || "Reveal") + "</button><span class='rv-a' data-rva='" + i + "' hidden>" + fmt(it[1] === "words" ? numWords(parseNum(it[0])) : it[1]) + "</span>") + "</div>").join("") + "</div>";
+      },
+      init(el) { el.addEventListener("click", (e) => { const b = e.target.closest("[data-rv]"); if (!b) return; const a = el.querySelector("[data-rva='" + b.dataset.rv + "']"); a.hidden = !a.hidden; b.textContent = a.hidden ? "Reveal" : "Hide"; }); },
+      reveal(el) { el.querySelectorAll("[data-rva]").forEach((a) => (a.hidden = false)); }
+    },
+    // Group: tap two or more numbers, then Group them, to show regrouping strategies.
+    group: {
+      html(p, pv) {
+        return (pv ? "" : "<p class='ph'>Tap numbers, then press Group to join them. Tap a grouped number to undo its group.</p>") +
+          "<div class='gp'>" + p.items.map((it, i) => (i ? "<span class='gp-op'>" + esc(p.op || "+") + "</span>" : "") + "<button class='gp-n' data-g='" + i + "'" + (pv ? " disabled" : "") + ">" + fmt(String(it)) + "</button>").join("") + "</div>" +
+          (pv ? "" : "<div class='checkrow'><button class='btn' data-gpgo>Group</button><button class='btn' data-gpclear>Clear groups</button></div>");
+      },
+      init(el) {
+        const COLS = ["#2F6FE4", "#F2994A", "#22A06B", "#D6408B", "#8A3CC4"];
+        let next = 0;
+        el.addEventListener("click", (e) => {
+          const n = e.target.closest(".gp-n");
+          if (n) {
+            if (n.dataset.grp) { const g = n.dataset.grp; el.querySelectorAll(".gp-n[data-grp='" + g + "']").forEach((x) => { delete x.dataset.grp; x.style.borderColor = ""; x.style.background = ""; }); return; }
+            n.classList.toggle("sel"); return;
+          }
+          if (e.target.closest("[data-gpgo]")) {
+            const sel = [...el.querySelectorAll(".gp-n.sel")]; if (sel.length < 2) return;
+            const c = COLS[next++ % COLS.length];
+            sel.forEach((x) => { x.classList.remove("sel"); x.dataset.grp = next; x.style.borderColor = c; x.style.background = c + "22"; });
+          }
+          if (e.target.closest("[data-gpclear]")) el.querySelectorAll(".gp-n").forEach((x) => { delete x.dataset.grp; x.classList.remove("sel"); x.style.borderColor = ""; x.style.background = ""; });
+        });
+      }
+    },
+    // Number sentences: each box takes a sentence such as 18 x 10; each must make the target.
+    expr: {
+      html(p, pv) {
+        if (pv) return "";
+        let h = "<div class='fields'>";
+        for (let i = 0; i < p.count; i++) h += "<label class='field'><input class='inp wide' data-f='" + i + "' placeholder='" + esc(p.placeholder || "e.g. 10 x 18") + "' autocomplete='off' aria-label='Number sentence " + (i + 1) + "'" + (pv ? " disabled" : "") + "><span class='unit'>= " + fmtN(p.target) + "</span></label>";
+        return h + "</div>";
+      },
+      check(el, p) {
+        const seen = new Set(); let all = true, n = 0, why = null;
+        el.querySelectorAll(".inp").forEach((inp) => {
+          inp.classList.remove("ok", "no"); const v = inp.value.trim(); if (!v) return; n++;
+          const val = evalExpr(v), key = v.replace(/\s/g, "").toLowerCase();
+          let ok = val != null && close(val, p.target);
+          if (ok && p.mustUse && !new RegExp(p.mustUse.re).test(v)) { ok = false; why = p.mustUse.msg; }
+          if (ok && seen.has(key)) { ok = false; why = "Each number sentence needs to be different."; }
+          seen.add(key); inp.classList.add(ok ? "ok" : "no"); if (!ok) all = false;
+        });
+        if (n < (p.min || p.count)) return { ok: null, msg: "Write " + (p.min || p.count) + " number sentences." };
+        return { ok: all, msg: all ? null : why };
+      }
+    },
+    // Place value chart: counters in columns, with trades to show standard and non-standard partitions.
+    pv: {
+      html(p, pv) {
+        const cols = p.cols.map((k) => PV[k]);
+        const cell = (c, i) => {
+          let t = "<td><div class='pv-n' data-n='" + i + "'>0</div><div class='pv-dots' data-dots='" + i + "'></div>";
+          if (!pv) {
+            t += "<div class='pv-pm'><button class='pv-b' data-pv='-' data-i='" + i + "' aria-label='Take one " + c.name + "'>−</button><button class='pv-b' data-pv='+' data-i='" + i + "' aria-label='Add one " + c.name + "'>+</button></div><div class='pv-tr'>";
+            if (i > 0) t += "<button class='pv-t' data-pv='group' data-i='" + i + "' title='Group 10 into 1 of the column to the left'>← group 10</button>";
+            if (i < cols.length - 1) t += "<button class='pv-t' data-pv='break' data-i='" + i + "' title='Break 1 into 10 of the column to the right'>break 1 →</button>";
+            t += "</div>";
+          }
+          return t + "</td>";
+        };
+        let h = "<div class='pvw'><table class='pv'><tr>" + cols.map((c) => "<th>" + c.name + "</th>").join("") + "</tr><tr>" + cols.map(cell).join("") + "</tr></table></div>";
+        if (!pv && p.shift) h += "<div class='checkrow'><button class='btn primary-soft' data-pvshift='1'>× 10</button><button class='btn primary-soft' data-pvshift='-1'>÷ 10</button><button class='btn' data-pvreset>Start again</button><span class='readout' data-pvmult></span></div>";
+        if (!pv) h += "<p class='pv-expr' data-expr></p><div class='checkrow'><button class='btn' data-pvtotal aria-pressed='false'>Show the number</button><span class='pv-total' data-total hidden></span></div>";
+        return h;
+      },
+      init(el, p) {
+        const cols = p.cols.map((k) => PV[k]), unit = PV[p.cols[p.cols.length - 1]].m;
+        let c = cols.map(() => 0);
+        if (typeof p.start === "number") { let rest = Math.round(p.start * 1000); cols.forEach((col, i) => { c[i] = Math.floor(rest / col.m); rest -= c[i] * col.m; }); }
+        else if (p.start) cols.forEach((col, i) => { c[i] = p.start[p.cols[i]] || 0; });
+        el._c = c; const c0 = c.slice(); el._m = 0;
+        const total = () => el._c.reduce((s, n, i) => s + n * cols[i].m, 0) / 1000;
+        el._total = total;
+        const upd = () => {
+          el._c.forEach((n, i) => {
+            el.querySelector("[data-n='" + i + "']").textContent = n;
+            el.querySelector("[data-dots='" + i + "']").innerHTML = "<i></i>".repeat(Math.min(n, 30)) + (n > 30 ? "<span>…</span>" : "");
+          });
+          const parts = el._c.map((n, i) => n ? n + " " + (n === 1 ? cols[i].name.replace(/s$/, "") : cols[i].name).toLowerCase() : "").filter(Boolean);
+          const ex = el.querySelector("[data-expr]"); if (ex) ex.textContent = parts.length ? parts.join(" + ") : "Use + to add counters.";
+          const t = el.querySelector("[data-total]"); if (t) t.textContent = "= " + fmtN(total());
+          const m = el.querySelector("[data-pvmult]"); if (m) m.textContent = el._m ? (el._m > 0 ? "× " : "÷ ") + fmtN(Math.pow(10, Math.abs(el._m))) + " — every digit moved " + Math.abs(el._m) + " place" + (Math.abs(el._m) > 1 ? "s" : "") + (el._m > 0 ? " left" : " right") : "";
+        };
+        el._upd = upd;
+        el.addEventListener("click", (e) => {
+          const b = e.target.closest("[data-pv]"), tt = e.target.closest("[data-pvtotal]");
+          if (tt) { const on = tt.getAttribute("aria-pressed") !== "true"; tt.setAttribute("aria-pressed", on); el.querySelector("[data-total]").hidden = !on; tt.textContent = on ? "Hide the number" : "Show the number"; return; }
+          const sh = e.target.closest("[data-pvshift]");
+          if (sh) { const d = +sh.dataset.pvshift, k = el._c;
+            if (d > 0 ? k[0] : k[k.length - 1]) { el.querySelector("[data-pvmult]").textContent = "There's no column for that digit to move into."; return; }
+            el._c = d > 0 ? k.slice(1).concat(0) : [0].concat(k.slice(0, -1)); el._m += d; upd(); return; }
+          if (e.target.closest("[data-pvreset]")) { el._c = c0.slice(); el._m = 0; upd(); return; }
+          if (!b) return;
+          const i = +b.dataset.i, a = b.dataset.pv, k = el._c;
+          if (a === "+") k[i]++;
+          else if (a === "-" && k[i] > 0) k[i]--;
+          else if (a === "break" && k[i] > 0) { k[i]--; k[i + 1] += 10; }
+          else if (a === "group" && k[i] >= 10) { k[i] -= 10; k[i - 1]++; }
+          upd();
+        });
+        void unit; upd();
+      },
+      check(el, p) {
+        if (p.target == null) return { ok: true };
+        const t = el._total(), c = el._c, ok = close(t, p.target), ns = c.some((n) => n > 9);
+        if (!ok) return { ok: false, msg: "The chart shows " + fmtN(t) + ". It needs to make " + fmtN(p.target) + "." };
+        if (p.need === "nonstandard" && !ns) return { ok: false, msg: "That's the standard partition. Break apart a counter to make a non-standard one." };
+        if (p.need === "standard" && ns) return { ok: false, msg: "Group any column with 10 or more to show the standard partition." };
+        return { ok: true, msg: "It makes " + fmtN(p.target) + "." };
+      }
+    },
+    // Area grid: tap each square in the shape to number it as you count.
+    areagrid: {
+      html(p, pv) {
+        const rows = p.cells.length, cols = p.cells[0].length;
+        let h = (pv ? "" : "<p class='ph'>Tap each square as you count it.</p>") + "<div class='ag' style='grid-template-columns:repeat(" + cols + ",1fr);max-width:" + cols * (pv ? 34 : 64) + "px'>";
+        p.cells.forEach((row, r) => [...row].forEach((ch, c) => { h += ch === "1" ? "<button class='ag-c in' data-c='" + r + "-" + c + "'" + (pv ? " disabled" : "") + " aria-label='Square'></button>" : "<span class='ag-c'></span>"; }));
+        return h + "</div>" + (pv ? "" : "<p class='readout' data-agread>0 squares counted</p>");
+      },
+      init(el, p) {
+        el._order = [];
+        const upd = () => {
+          el.querySelectorAll(".ag-c.in").forEach((b) => { const k = el._order.indexOf(b.dataset.c); b.textContent = k >= 0 ? k + 1 : ""; b.classList.toggle("on", k >= 0); });
+          el.querySelector("[data-agread]").textContent = el._order.length + " square" + (el._order.length === 1 ? "" : "s") + " counted";
+        };
+        el._upd = upd;
+        el.addEventListener("click", (e) => { const b = e.target.closest(".ag-c.in"); if (!b) return; const k = el._order.indexOf(b.dataset.c); k >= 0 ? el._order.splice(k, 1) : el._order.push(b.dataset.c); upd(); });
+        upd();
+      },
+      reveal(el) { el._order = [...el.querySelectorAll(".ag-c.in")].map((b) => b.dataset.c); el._upd(); }
+    },
+    // Angle maker: drag the arm; the class sees how it compares with a right angle.
+    angle: {
+      html(p, pv) {
+        if (pv) return "";
+        return (p.label ? "<p class='part-h'>" + fmt(p.label) + "</p>" : "") + "<div class='angw'><svg viewBox='0 0 340 230' class='ang' role='img' aria-label='Angle maker. Drag the blue arm.'>" +
+          "<path class='ang-arc' d=''/><path class='ang-sq' d='' /><line class='ang-arm' x1='60' y1='190' x2='300' y2='190'/><line class='ang-arm move' x1='60' y1='190' x2='60' y2='30'/><circle class='ang-v' cx='60' cy='190' r='6'/><circle class='ang-h' r='14' cx='60' cy='30'/></svg></div>" +
+          "<p class='readout' data-angread></p>" + (p.lengthen ? "<div class='checkrow'><button class='btn' data-anglen aria-pressed='false'>Make the arms longer</button></div>" : "");
+      },
+      init(el, p) {
+        const svg = el.querySelector("svg"), arm = svg.querySelector(".move"), h = svg.querySelector(".ang-h"), arc = svg.querySelector(".ang-arc"), sq = svg.querySelector(".ang-sq");
+        let L = p.reflex ? 95 : 160; const vx = p.reflex ? 170 : 60, vy = p.reflex ? 115 : 190, fixed = svg.querySelector(".ang-arm:not(.move)");
+        if (p.reflex) { fixed.setAttribute("x1", vx); fixed.setAttribute("y1", vy); fixed.setAttribute("x2", 310); fixed.setAttribute("y2", vy); arm.setAttribute("x1", vx); arm.setAttribute("y1", vy); svg.querySelector(".ang-v").setAttribute("cx", vx); svg.querySelector(".ang-v").setAttribute("cy", vy); }
+        const set = (deg) => {
+          deg = Math.max(5, Math.min(p.reflex ? 355 : 180, deg)); for (const snap of [90, 180, 270]) if (Math.abs(deg - snap) < 4) deg = snap;
+          el._deg = deg; const r = (deg * Math.PI) / 180, x = vx + L * Math.cos(r), y = vy - L * Math.sin(r);
+          arm.setAttribute("x2", x); arm.setAttribute("y2", y); h.setAttribute("cx", x); h.setAttribute("cy", y);
+          const R = 40, ax = vx + R * Math.cos(r), ay = vy - R * Math.sin(r);
+          arc.setAttribute("d", deg === 90 ? "" : "M " + (vx + R) + " " + vy + " A " + R + " " + R + " 0 " + (deg > 180 ? 1 : 0) + " 0 " + ax + " " + ay);
+          sq.setAttribute("d", deg === 90 ? "M " + (vx + 22) + " " + vy + " L " + (vx + 22) + " " + (vy - 22) + " L " + vx + " " + (vy - 22) : "");
+          if (p.names) { const n = angleName(deg); el.querySelector("[data-angread]").textContent = "This is " + (/^[aeiou]/.test(n) ? "an " : "a ") + n + " angle" + (p.degrees ? " (" + Math.round(deg) + "°)" : "") + "."; return; }
+          el.querySelector("[data-angread]").textContent = "This angle is " + angleWord(deg).replace(/^A /, "a ").replace(/^L/, "l").replace(/^G/, "g") + (p.degrees ? " (" + Math.round(deg) + "°)" : "") + ".";
+        };
+        el._set = set;
+        const pt = (e) => { const r = svg.getBoundingClientRect(), sx = 340 / r.width; return [(e.clientX - r.left) * sx, (e.clientY - r.top) * sx]; };
+        svg.addEventListener("pointerdown", (e) => {
+          e.preventDefault(); svg.setPointerCapture(e.pointerId);
+          const mv = (ev) => { const [x, y] = pt(ev); let d = (Math.atan2(vy - y, x - vx) * 180) / Math.PI; if (p.reflex && d < 0) d += 360; else if (!p.reflex && d < -90) d = 180; set(d); };
+          mv(e);
+          const up = () => { svg.removeEventListener("pointermove", mv); svg.removeEventListener("pointerup", up); };
+          svg.addEventListener("pointermove", mv); svg.addEventListener("pointerup", up);
+        });
+        el.addEventListener("click", (e) => { const b = e.target.closest("[data-anglen]"); if (!b) return; const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.textContent = on ? "Make the arms shorter" : "Make the arms longer"; L = on ? 175 : 110; fixed.setAttribute("x2", vx + L + (on ? 90 : 0)); set(el._deg); });
+        if (p.lengthen) { L = 110; fixed.setAttribute("x2", vx + L); }
+        set(p.start || 120);
+      },
+      check(el, p) {
+        if (!p.target) return { ok: true };
+        if (p.names) { const n = angleName(el._deg), ok = n === p.target; return { ok, msg: ok ? null : "That is " + (/^[aeiou]/.test(n) ? "an " : "a ") + n + " angle. Try to make " + (/^[aeiou]/.test(p.target) ? "an " : "a ") + p.target + " angle." }; }
+        const w = angleKey(el._deg), ok = w === p.target;
+        return { ok, msg: ok ? null : "That angle is " + angleWord(el._deg).toLowerCase() + ". " + { less: "Make it smaller than a right angle.", right: "Make a right angle, like the corner of a book.", greater: "Open it wider than a right angle." }[p.target] };
+      },
+      reveal(el, p) { if (p.target) el._set({ less: 50, right: 90, greater: 130, acute: 50, obtuse: 130, straight: 180, reflex: 250 }[p.target]); }
+    },
+    // Number chart: tap the numbers that belong (factors, multiples…).
+    numchart: {
+      html(p, pv) {
+        if (pv) return "";
+        let h = (p.hint ? "<p class='ph'>" + esc(p.hint) + "</p>" : "") + "<div class='nc'>";
+        for (let n = p.from; n <= p.to; n++) h += "<button class='nc-n' data-n='" + n + "' aria-pressed='false'>" + n + "</button>";
+        return h + "</div>";
+      },
+      init(el) { el.addEventListener("click", (e) => { const b = e.target.closest(".nc-n"); if (!b) return; b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true"); el.querySelectorAll(".nc-n").forEach((x) => x.classList.remove("ok", "no", "miss")); }); },
+      check(el, p) {
+        const on = [...el.querySelectorAll(".nc-n[aria-pressed='true']")].map((b) => +b.dataset.n);
+        if (!on.length) return { ok: null, msg: "Tap the numbers first." };
+        let all = true;
+        el.querySelectorAll(".nc-n").forEach((b) => {
+          const n = +b.dataset.n, want = p.answer.includes(n), got = on.includes(n);
+          if (got) b.classList.add(want ? "ok" : "no");
+          if (want !== got) all = false;
+        });
+        const missing = p.answer.filter((n) => !on.includes(n)).length;
+        return { ok: all, msg: all ? null : missing ? "Some are missing. Think in pairs: if one number works, what does it pair with?" : "The red ones don't belong." };
+      },
+      reveal(el, p) { el.querySelectorAll(".nc-n").forEach((b) => { const on = p.answer.includes(+b.dataset.n); b.setAttribute("aria-pressed", on); b.classList.toggle("ok", on); }); }
+    },
+    // Shop: tap items into the basket. The total stays hidden until the class has worked it out.
+    shop: {
+      html(p, pv) {
+        const cards = "<div class='shop'>" + p.items.map((it, i) => "<button class='shop-i' data-i='" + i + "' aria-pressed='false'" + (pv ? " disabled" : "") + "><span>" + esc(it[0]) + "</span><b>$" + it[1].toFixed(2) + "</b></button>").join("") + "</div>";
+        if (pv) return cards;
+        return "<p class='ph'>" + esc(p.hint || (p.pick ? "Tap " + p.pick + " items to put them in the basket." : "Tap items to put them in the basket.")) + "</p>" + cards +
+          "<p class='shop-basket' data-basket>Basket: empty</p><div class='checkrow'><button class='btn' data-shoptotal aria-pressed='false'>Show the total</button><span class='pv-total' data-stotal hidden></span></div>";
+      },
+      init(el, p) {
+        const upd = () => {
+          const on = [...el.querySelectorAll(".shop-i[aria-pressed='true']")].map((b) => p.items[+b.dataset.i]);
+          el._sum = on.reduce((s, it) => s + it[1], 0); el._n = on.length;
+          el.querySelector("[data-basket]").textContent = "Basket: " + (on.length ? on.map((it) => it[0]).join(", ") : "empty");
+          el.querySelector("[data-stotal]").textContent = "$" + el._sum.toFixed(2) + (p.budget ? (el._sum <= p.budget ? " — $" + (p.budget - el._sum).toFixed(2) + " left from $" + p.budget : " — $" + (el._sum - p.budget).toFixed(2) + " over budget") : "");
+        };
+        el._sum = 0; el._n = 0;
+        el.addEventListener("click", (e) => {
+          const b = e.target.closest(".shop-i");
+          if (b) { b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true"); upd(); return; }
+          const t = e.target.closest("[data-shoptotal]");
+          if (t) { const on = t.getAttribute("aria-pressed") !== "true"; t.setAttribute("aria-pressed", on); el.querySelector("[data-stotal]").hidden = !on; t.textContent = on ? "Hide the total" : "Show the total"; }
+        });
+        upd();
+      },
+      check(el, p) {
+        if (!el._n) return { ok: null, msg: "Put some items in the basket first." };
+        if (p.pick && el._n !== p.pick) return { ok: false, msg: "Choose exactly " + p.pick + " items." };
+        if (p.budget && el._sum > p.budget) return { ok: false, msg: "That's over the budget. Swap an item for a cheaper one." };
+        return { ok: true, msg: "Total: $" + el._sum.toFixed(2) + (p.budget ? ", $" + (p.budget - el._sum).toFixed(2) + " left." : ".") };
+      }
     },
     // Tap each side of a shape to mark it as counted. Lengths are left for the class to add.
     sides: {
@@ -569,9 +1248,13 @@
         const setup = () => {
           const r = box.getBoundingClientRect(), d = window.devicePixelRatio || 1;
           cv.width = r.width * d; cv.height = r.height * d; ctx.setTransform(d, 0, 0, d, 0, 0);
+          if (p.bgimg && el._bg && el._bg.complete) { const im = el._bg, sc = Math.min(r.width / im.naturalWidth, r.height / im.naturalHeight); ctx.drawImage(im, (r.width - im.naturalWidth * sc) / 2, (r.height - im.naturalHeight * sc) / 2, im.naturalWidth * sc, im.naturalHeight * sc); }
+          if (p.shape) { ctx.fillStyle = p.shapeFill || "rgba(112,48,160,.25)"; ctx.strokeStyle = p.shapeStroke || "#7030A0"; ctx.lineWidth = 3; const sc = Math.min(r.width / p.shape.view[0], r.height / p.shape.view[1]), ox = (r.width - p.shape.view[0] * sc) / 2, oy = (r.height - p.shape.view[1] * sc) / 2; ctx.beginPath(); p.shape.pts.forEach(([x, y], k) => (k ? ctx.lineTo : ctx.moveTo).call(ctx, ox + x * sc, oy + y * sc)); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+          if (p.grid === "square") { ctx.strokeStyle = faint; ctx.lineWidth = 1; for (let x = 0; x < r.width; x += 36) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, r.height); ctx.stroke(); } for (let y = 0; y < r.height; y += 36) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(r.width, y); ctx.stroke(); } }
           if (p.grid === "triangle") { ctx.fillStyle = faint; const s = 36, h = s * 0.866; for (let y = 10, row = 0; y < r.height; y += h, row++) for (let x = (row % 2) * s / 2 + 10; x < r.width; x += s) { ctx.beginPath(); ctx.arc(x, y, 2.2, 0, 7); ctx.fill(); } }
           ctx.strokeStyle = ink; ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.lineJoin = "round";
         };
+        if (p.bgimg) { el._bg = new Image(); el._bg.onload = setup; el._bg.src = p.bgimg; }
         setup();
         let drawing = false;
         const pt = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
@@ -628,9 +1311,9 @@
   function hintFor(q) {
     if (q.type !== "sr") return [ICON.tap, "Tap"];
     const k = (q.interact || []).map((p) => p.kind);
-    if (k.includes("numberline") || k.includes("marker")) return [ICON.drag, "Drag"];
+    if (k.includes("numberline") || k.includes("marker") || k.includes("jumps") || k.includes("angle")) return [ICON.drag, "Drag"];
     if (k.includes("sketch")) return [ICON.draw, "Draw"];
-    if (k.some((x) => ["choose", "select", "order", "balance", "shade", "stack", "classify", "sides"].includes(x))) return [ICON.tap, "Tap"];
+    if (k.some((x) => ["choose", "select", "order", "balance", "shade", "stack", "classify", "sides", "pv", "areagrid", "numchart", "shop", "reveal", "group", "pack", "array", "calendar", "cells", "turns", "clock", "coins", "combos", "gridref", "corners", "plane", "mirror"].includes(x))) return [ICON.tap, "Tap"];
     if (k.length) return [ICON.type, "Type"];
     return [ICON.talk, "Discuss"];
   }
@@ -660,7 +1343,7 @@
     }
     if (q.type === "tf") h += "<ol class='opts tf'>" + ["True", "False"].map((o, k) => "<li><button class='opt' data-i='" + k + "'>" + o + "</button></li>").join("") + "</ol>";
     if (q.follow) h += "<p class='follow'>" + fmt(q.follow) + "</p>";
-    if (!spot && q.interact) {
+    if (!spot && q.interact && q.type === "sr") {
       const pv = q.interact.map((p) => W[p.kind].html(p, true)).filter(Boolean);
       if (pv.length) h += pv.map((x) => "<div class='part'>" + x + "</div>").join("");
     }
@@ -672,7 +1355,8 @@
     return h;
   }
   function actHTML(q) {
-    if (q.type !== "sr") return "<p class='feedback' data-fb aria-live='polite'></p>";
+    if (q.type !== "sr") return (q.interact ? "<div class='act'>" + q.interact.map((p, k) => "<div class='part' data-part='" + k + "'>" + W[p.kind].html(p, false) + "</div>").join("") + "</div>" : "") +
+      "<p class='feedback' data-fb aria-live='polite'></p>";
     if (!q.interact) return "<div class='act'><p class='open-note'>" + ICON.talk + "Think, then share with a partner. Reveal the answer when you're ready.</p></div>";
     const checkable = q.interact.some((p) => W[p.kind].check);
     return "<div class='act'>" + q.interact.map((p, k) => "<div class='part' data-part='" + k + "'>" + W[p.kind].html(p, false) + "</div>").join("") +
