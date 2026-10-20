@@ -237,14 +237,14 @@
   const coinName = (c) => (c >= 100 ? "$" + c / 100 : c + "c");
   // Place value columns (m = value in thousandths, so decimals stay exact).
   const PV = {
-    M: { name: "Millions", m: 1e9 }, HTh: { name: "Hundred thousands", m: 1e8 }, TTh: { name: "Ten thousands", m: 1e7 }, Th: { name: "Thousands", m: 1e6 },
+    HM: { name: "Hundred millions", m: 1e11 }, TM: { name: "Ten millions", m: 1e10 }, M: { name: "Millions", m: 1e9 }, HTh: { name: "Hundred thousands", m: 1e8 }, TTh: { name: "Ten thousands", m: 1e7 }, Th: { name: "Thousands", m: 1e6 },
     H: { name: "Hundreds", m: 1e5 }, T: { name: "Tens", m: 1e4 }, O: { name: "Ones", m: 1e3 }, t: { name: "Tenths", m: 100 }, h: { name: "Hundredths", m: 10 }, th: { name: "Thousandths", m: 1 }
   };
   // Houses: whole numbers are read in groups of three (hundreds, tens, ones of each house).
-  const PV_HOUSE = { M: ["Millions", "O"], HTh: ["Thousands", "H"], TTh: ["Thousands", "T"], Th: ["Thousands", "O"], H: ["Ones", "H"], T: ["Ones", "T"], O: ["Ones", "O"], t: ["Decimals", "Tenths"], h: ["Decimals", "Hundredths"], th: ["Decimals", "Thousandths"] };
+  const PV_HOUSE = { HM: ["Millions", "H"], TM: ["Millions", "T"], M: ["Millions", "O"], HTh: ["Thousands", "H"], TTh: ["Thousands", "T"], Th: ["Thousands", "O"], H: ["Ones", "H"], T: ["Ones", "T"], O: ["Ones", "O"], t: ["Decimals", "Tenths"], h: ["Decimals", "Hundredths"], th: ["Decimals", "Thousandths"] };
   const HOUSE_INFO = { Millions: [1e6, "million"], Thousands: [1e3, "thousand"], Ones: [1, ""], Decimals: [1, ""] };
   function pvHouses(p) {
-    if (p.houses === false || !(p.houses || p.cols.some((k) => k === "TTh" || k === "HTh" || k === "M"))) return null;
+    if (p.houses === false || !(p.houses || p.cols.some((k) => ["TTh", "HTh", "M", "TM", "HM"].includes(k)))) return null;
     const out = [];
     p.cols.forEach((k, i) => { const n = PV_HOUSE[k][0], g = out[out.length - 1]; if (g && g.name === n) g.cols.push(i); else out.push({ name: n, cols: [i], unit: HOUSE_INFO[n][0], word: HOUSE_INFO[n][1] }); });
     return out;
@@ -515,17 +515,21 @@
     shade: {
       html(p, pv) {
         let h = "<div class='shade' role='group' aria-label='Strip of " + p.parts + " parts'>";
-        for (let i = 0; i < p.parts; i++) h += "<button aria-pressed='false' aria-label='Part " + (i + 1) + "'" + (pv ? " disabled" : "") + "></button>";
+        for (let i = 0; i < p.parts; i++) h += "<button aria-pressed='" + (p.pre || []).includes(i) + "' aria-label='Part " + (i + 1) + "'" + (pv ? " disabled" : "") + "></button>";
         return h + "</div>" + (pv ? "" : "<p class='readout' data-read>" + esc(p.hint || "Tap the parts to shade them.") + "</p>");
       },
       init(el, p) {
         el.addEventListener("click", (e) => {
           const b = e.target.closest(".shade button"); if (!b) return;
           b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true");
+          read();
+        });
+        const read = () => {
           const n = el.querySelectorAll(".shade [aria-pressed='true']").length;
           if (p.pct) { el.querySelector("[data-read]").innerHTML = fmt("Shaded: [" + n + "/" + p.parts + "]") + " = " + fmtN((n / p.parts) * 100) + "%" + (p.each ? " = " + (p.money ? "$" : "") + fmtN(n * p.each) : ""); return; }
           el.querySelector("[data-read]").innerHTML = fmt("Shaded: [" + n + "/" + p.parts + "]") + (n * 2 === p.parts ? " — exactly half" : n * 2 < p.parts ? " — less than half" : " — more than half");
-        });
+        };
+        if ((p.pre || []).length) read();
       }
     },
     stack: {
@@ -618,6 +622,7 @@
         if (!cur.length) return { ok: null, msg: "Put some coins in the purse first." };
         const t = cur.reduce((a, b) => a + b, 0);
         if (p.count && cur.length !== p.count) return { ok: false, msg: "Use exactly " + p.count + " coins." };
+        if (p.mix && !(cur.some((c) => c >= 100) && cur.some((c) => c < 100))) return { ok: false, msg: "Use both gold and silver coins." };
         if (p.target && t !== p.target) return { ok: false, msg: "That makes " + money(t) + ". It needs to make " + money(p.target) + "." };
         return { ok: true, msg: cur.map(coinName).join(" + ") + " = " + money(t) + (el._saved.length > 1 ? ". " + el._saved.length + " combinations found." : "") };
       }
@@ -683,6 +688,99 @@
         });
         if (!filled) return { ok: null, msg: "Write a number sentence in every box." };
         return { ok: all, msg: all ? null : why };
+      }
+    },
+    // Bar model: the whole on top, its parts below in proportion. Tap a ? to reveal it.
+    bar: {
+      html(p, pv) {
+        const tot = p.whole.v, seg = (q, i, top) => "<div class='bm-seg" + (top ? " top" : "") + (q.hide ? " hid" : "") + "' style='flex:" + q.v + "'" + (q.hide && !pv ? " role='button' tabindex='0' data-bm='" + i + "'" : "") + "><span data-bml='" + i + "'>" + (q.hide ? "?" : fmt(q.l || fmtN(q.v))) + "</span>" + (q.n ? "<small>" + esc(q.n) + "</small>" : "") + "</div>";
+        return (pv ? "" : "<p class='ph'>" + esc(p.hint || "The top bar is the whole. The parts below add up to it. Tap a ? to reveal it.") + "</p>") +
+          "<div class='bm'><div class='bm-row'>" + seg(p.whole, "w", true) + "</div><div class='bm-row'>" + p.parts.map((q, i) => seg(q, i)).join("") + "</div></div>";
+      },
+      init(el, p) {
+        el.addEventListener("click", (e) => {
+          const b = e.target.closest("[data-bm]"); if (!b) return;
+          const k = b.dataset.bm, q = k === "w" ? p.whole : p.parts[+k], sp = b.querySelector("[data-bml]"), on = sp.textContent === "?";
+          sp.innerHTML = on ? fmt(q.l || fmtN(q.v)) : "?"; b.classList.toggle("shown", on);
+        });
+      }
+    },
+    // Folding a paper strip in half: each fold doubles the equal parts.
+    fold: {
+      html(p, pv) {
+        if (pv) return "";
+        return "<div class='fd-strip' data-fd></div><div class='checkrow'><button class='btn primary-soft' data-fdgo>Fold in half</button><button class='btn' data-fdun>Unfold</button></div><p class='readout' data-fdread></p>";
+      },
+      init(el, p) {
+        el._f = 0;
+        const upd = () => {
+          const n = Math.pow(2, el._f), strip = el.querySelector("[data-fd]");
+          strip.style.setProperty("--n", n); strip.innerHTML = "<i></i>".repeat(n);
+          el.querySelector("[data-fdread]").textContent = el._f + " fold" + (el._f === 1 ? "" : "s") + " → " + n + " equal part" + (n === 1 ? "" : "s");
+        };
+        el.addEventListener("click", (e) => {
+          if (e.target.closest("[data-fdgo]") && el._f < (p.max || 5)) { el._f++; upd(); }
+          if (e.target.closest("[data-fdun]")) { el._f = 0; upd(); }
+        });
+        upd();
+      },
+      check(el, p) { if (!p.target) return { ok: true }; const n = Math.pow(2, el._f), ok = n === p.target; return { ok, msg: ok ? null : "That makes " + n + " parts. It needs " + p.target + "." }; },
+      reveal(el, p) { if (p.target) { el._f = Math.round(Math.log2(p.target)); el.querySelector("[data-fdun]").click(); for (let i = 0; i < Math.round(Math.log2(p.target)); i++) el.querySelector("[data-fdgo]").click(); } }
+    },
+    // Balance: both sides of an equation must weigh the same. Type the missing number to level the beam.
+    scale: {
+      html(p, pv) {
+        const side = (t, k) => "<div class='sc-side'>" + t.split("?").map(esc).join(k ? "<input class='inp sc-inp' data-f='0' inputmode='numeric' autocomplete='off' aria-label='Missing number'" + (pv ? " disabled" : "") + ">" : "") + "</div>";
+        return "<div class='sc'><div class='sc-beam' data-scb><div class='sc-pan'>" + side(p.left, p.left.includes("?")) + "</div><div class='sc-pan'>" + side(p.right, p.right.includes("?")) + "</div></div><div class='sc-post'></div></div>" +
+          (pv ? "" : "<div class='checkrow'><button class='btn' data-sctot aria-pressed='false'>Show each side's total</button></div><p class='readout' data-scread></p>");
+      },
+      init(el, p) {
+        const val = (t) => { const v = el.querySelector(".sc-inp").value.trim(); return evalExpr(t.replace("?", v === "" ? "0" : v)); };
+        const upd = () => {
+          const L = val(p.left), R = val(p.right), d = L == null || R == null ? 0 : Math.max(-1, Math.min(1, (R - L) / Math.max(1, Math.abs(L), Math.abs(R)) * 4));
+          el.querySelector("[data-scb]").style.transform = "rotate(" + (d * 9).toFixed(1) + "deg)";
+          const on = el.querySelector("[data-sctot]").getAttribute("aria-pressed") === "true";
+          el.querySelector("[data-scread]").textContent = !on || L == null || R == null ? "" : "Left side = " + fmtN(L) + " · Right side = " + fmtN(R) + (close(L, R) ? " · Balanced!" : "");
+        };
+        el.addEventListener("input", upd);
+        el.addEventListener("click", (e) => { const b = e.target.closest("[data-sctot]"); if (!b) return; b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true"); upd(); });
+        upd();
+      },
+      check(el, p) {
+        const inp = el.querySelector(".sc-inp"), v = parseNum(inp.value); inp.classList.remove("ok", "no");
+        if (v == null) return { ok: null, msg: "Type the missing number first." };
+        const ok = close(v, p.answer); inp.classList.add(ok ? "ok" : "no");
+        return { ok, msg: ok ? "Both sides are equal. The scale balances." : "The scale doesn't balance yet." };
+      }
+    },
+    // Bar graph: tap a bar to run a guide line across to the scale.
+    bargraph: {
+      html(p, pv) {
+        const W_ = 640, H = 362, L = 70, B = 290, T = 20, R = 20 + (p.legendW || 150), ph = B - T, X0 = L, X1 = W_ - R;
+        const y = (v) => B - (v / p.max) * ph, gw = (X1 - X0) / p.groups.length, ns = p.series.length, bw = Math.min(46, (gw * 0.7) / ns);
+        let s = "<svg viewBox='0 0 " + W_ + " " + H + "' class='bg' role='img' aria-label='" + esc(p.label || "Bar graph") + "'>";
+        if (p.minor) for (let v = 0; v <= p.max; v += p.minor) s += "<line class='bg-mi' x1='" + X0 + "' x2='" + X1 + "' y1='" + y(v) + "' y2='" + y(v) + "'/>";
+        for (let v = 0; v <= p.max; v += p.step) s += "<line class='bg-gl' x1='" + X0 + "' x2='" + X1 + "' y1='" + y(v) + "' y2='" + y(v) + "'/><text class='bg-n' x='" + (X0 - 10) + "' y='" + (y(v) + 6) + "'>" + v + "</text>";
+        s += "<line class='bg-ax' x1='" + X0 + "' y1='" + T + "' x2='" + X0 + "' y2='" + B + "'/><line class='bg-ax' x1='" + X0 + "' y1='" + B + "' x2='" + X1 + "' y2='" + B + "'/><g data-bgg></g>";
+        p.groups.forEach((g, gi) => {
+          const cx = X0 + gw * (gi + 0.5), x0 = cx - (bw * ns + 8 * (ns - 1)) / 2;
+          g.v.forEach((v, si) => { const x = x0 + si * (bw + 8); s += "<rect class='bg-bar' data-bgb='" + gi + "-" + si + "' x='" + x + "' y='" + y(v) + "' width='" + bw + "' height='" + (B - y(v)) + "' fill='" + p.series[si].c + "'" + (pv ? " style='pointer-events:none'" : "") + "/>"; });
+          s += "<text class='bg-l' x='" + cx + "' y='" + (B + 24) + "'>" + esc(g.l) + "</text>";
+        });
+        p.series.forEach((se, si) => { s += "<rect x='" + (X1 + 24) + "' y='" + (T + 10 + si * 30) + "' width='20' height='20' fill='" + se.c + "'/><text class='bg-lg' x='" + (X1 + 52) + "' y='" + (T + 26 + si * 30) + "'>" + esc(se.l) + "</text>"; });
+        if (p.ylabel) s += "<text class='bg-al' transform='translate(20 " + (T + ph / 2) + ") rotate(-90)'>" + esc(p.ylabel) + "</text>";
+        if (p.xlabel) s += "<text class='bg-al' x='" + (X0 + X1) / 2 + "' y='" + (H - 6) + "'>" + esc(p.xlabel) + "</text>";
+        return (pv ? "" : "<p class='ph'>" + esc(p.hint || "Tap a bar to run a line across to the scale.") + "</p>") + "<div class='bg-pic'>" + s + "</svg></div>";
+      },
+      init(el, p) {
+        const on = new Set(), B = 290, T = 20, ph = B - T;
+        el.addEventListener("click", (e) => {
+          const b = e.target.closest("[data-bgb]"); if (!b) return;
+          const k = b.dataset.bgb; on.has(k) ? on.delete(k) : on.add(k);
+          el.querySelectorAll("[data-bgb]").forEach((r) => r.classList.toggle("on", on.has(r.dataset.bgb)));
+          let h = ""; on.forEach((k2) => { const r = el.querySelector("[data-bgb='" + k2 + "']"), yy = +r.getAttribute("y"); h += "<line class='bg-guide' x1='70' x2='" + (+r.getAttribute("x") + +r.getAttribute("width")) + "' y1='" + yy + "' y2='" + yy + "'/>"; });
+          el.querySelector("[data-bgg]").innerHTML = h; void ph; void T;
+        });
       }
     },
     // Corner tester: tap a corner to lay a right-angle tester on it, tap again to name the angle.
@@ -993,7 +1091,7 @@
       html(p, pv) {
         if (pv) return "";
         let h = "<div class='fields'>";
-        for (let i = 0; i < p.count; i++) h += "<label class='field'><input class='inp wide' data-f='" + i + "' placeholder='" + esc(p.placeholder || "e.g. 10 x 18") + "' autocomplete='off' aria-label='Number sentence " + (i + 1) + "'" + (pv ? " disabled" : "") + "><span class='unit'>= " + fmtN(p.target) + "</span></label>";
+        for (let i = 0; i < p.count; i++) h += "<label class='field'><input class='inp wide expr-inp' data-f='" + i + "' placeholder='" + esc(p.placeholder || "e.g. 10 x 18") + "' autocomplete='off' aria-label='Number sentence " + (i + 1) + "'" + (pv ? " disabled" : "") + "><span class='unit'>= " + fmtN(p.target) + "</span></label>";
         return h + "</div>";
       },
       check(el, p) {
@@ -1094,7 +1192,7 @@
     areagrid: {
       html(p, pv) {
         const rows = p.cells.length, cols = p.cells[0].length;
-        let h = (pv ? "" : "<p class='ph'>Tap each square as you count it.</p>") + "<div class='ag' style='grid-template-columns:repeat(" + cols + ",1fr);max-width:" + cols * (pv ? 34 : 64) + "px'>";
+        let h = (pv ? "" : "<p class='ph'>Tap each square as you count it.</p>") + "<div class='ag' style='grid-template-columns:repeat(" + cols + ",1fr);max-width:" + cols * (pv ? 34 : p.size || 64) + "px'>";
         p.cells.forEach((row, r) => [...row].forEach((ch, c) => { h += ch === "1" ? "<button class='ag-c in' data-c='" + r + "-" + c + "'" + (pv ? " disabled" : "") + " aria-label='Square'></button>" : "<span class='ag-c'></span>"; }));
         return h + "</div>" + (pv ? "" : "<p class='readout' data-agread>0 squares counted</p>");
       },
@@ -1123,11 +1221,11 @@
         let L = p.reflex ? 95 : 160; const vx = p.reflex ? 170 : 60, vy = p.reflex ? 115 : 190, fixed = svg.querySelector(".ang-arm:not(.move)");
         if (p.reflex) { fixed.setAttribute("x1", vx); fixed.setAttribute("y1", vy); fixed.setAttribute("x2", 310); fixed.setAttribute("y2", vy); arm.setAttribute("x1", vx); arm.setAttribute("y1", vy); svg.querySelector(".ang-v").setAttribute("cx", vx); svg.querySelector(".ang-v").setAttribute("cy", vy); }
         const set = (deg) => {
-          deg = Math.max(5, Math.min(p.reflex ? 355 : 180, deg)); for (const snap of [90, 180, 270]) if (Math.abs(deg - snap) < 4) deg = snap;
+          deg = Math.max(5, Math.min(p.reflex ? 360 : 180, deg)); for (const snap of [90, 180, 270, 360]) if (Math.abs(deg - snap) < 4) deg = snap;
           el._deg = deg; const r = (deg * Math.PI) / 180, x = vx + L * Math.cos(r), y = vy - L * Math.sin(r);
           arm.setAttribute("x2", x); arm.setAttribute("y2", y); h.setAttribute("cx", x); h.setAttribute("cy", y);
           const R = 40, ax = vx + R * Math.cos(r), ay = vy - R * Math.sin(r);
-          arc.setAttribute("d", deg === 90 ? "" : "M " + (vx + R) + " " + vy + " A " + R + " " + R + " 0 " + (deg > 180 ? 1 : 0) + " 0 " + ax + " " + ay);
+          arc.setAttribute("d", deg === 90 ? "" : deg >= 360 ? "M " + (vx + R) + " " + vy + " A " + R + " " + R + " 0 1 0 " + (vx - R) + " " + vy + " A " + R + " " + R + " 0 1 0 " + (vx + R) + " " + vy : "M " + (vx + R) + " " + vy + " A " + R + " " + R + " 0 " + (deg > 180 ? 1 : 0) + " 0 " + ax + " " + ay);
           sq.setAttribute("d", deg === 90 ? "M " + (vx + 22) + " " + vy + " L " + (vx + 22) + " " + (vy - 22) + " L " + vx + " " + (vy - 22) : "");
           if (p.names) { const n = angleName(deg); el.querySelector("[data-angread]").textContent = "This is " + (/^[aeiou]/.test(n) ? "an " : "a ") + n + " angle" + (p.degrees ? " (" + Math.round(deg) + "°)" : "") + "."; return; }
           el.querySelector("[data-angread]").textContent = "This angle is " + angleWord(deg).replace(/^A /, "a ").replace(/^L/, "l").replace(/^G/, "g") + (p.degrees ? " (" + Math.round(deg) + "°)" : "") + ".";
@@ -1136,7 +1234,7 @@
         const pt = (e) => { const r = svg.getBoundingClientRect(), sx = 340 / r.width; return [(e.clientX - r.left) * sx, (e.clientY - r.top) * sx]; };
         svg.addEventListener("pointerdown", (e) => {
           e.preventDefault(); svg.setPointerCapture(e.pointerId);
-          const mv = (ev) => { const [x, y] = pt(ev); let d = (Math.atan2(vy - y, x - vx) * 180) / Math.PI; if (p.reflex && d < 0) d += 360; else if (!p.reflex && d < -90) d = 180; set(d); };
+          const mv = (ev) => { const [x, y] = pt(ev); let d = (Math.atan2(vy - y, x - vx) * 180) / Math.PI; if (p.reflex && d < 0) d += 360; if (p.reflex && el._deg > 300 && d < 60) d = 360; else if (!p.reflex && d < -90) d = 180; set(d); };
           mv(e);
           const up = () => { svg.removeEventListener("pointermove", mv); svg.removeEventListener("pointerup", up); };
           svg.addEventListener("pointermove", mv); svg.addEventListener("pointerup", up);
@@ -1151,7 +1249,7 @@
         const w = angleKey(el._deg), ok = w === p.target;
         return { ok, msg: ok ? null : "That angle is " + angleWord(el._deg).toLowerCase() + ". " + { less: "Make it smaller than a right angle.", right: "Make a right angle, like the corner of a book.", greater: "Open it wider than a right angle." }[p.target] };
       },
-      reveal(el, p) { if (p.target) el._set({ less: 50, right: 90, greater: 130, acute: 50, obtuse: 130, straight: 180, reflex: 250 }[p.target]); }
+      reveal(el, p) { if (p.target) el._set({ less: 50, right: 90, greater: 130, acute: 50, obtuse: 130, straight: 180, reflex: 250, revolution: 360 }[p.target]); }
     },
     // Number chart: tap the numbers that belong (factors, multiples…).
     numchart: {
@@ -1361,7 +1459,7 @@
     const k = (q.interact || []).map((p) => p.kind);
     if (k.includes("numberline") || k.includes("marker") || k.includes("jumps") || k.includes("angle")) return [ICON.drag, "Drag"];
     if (k.includes("sketch")) return [ICON.draw, "Draw"];
-    if (k.some((x) => ["choose", "select", "order", "balance", "shade", "stack", "classify", "sides", "pv", "areagrid", "numchart", "shop", "reveal", "group", "pack", "array", "calendar", "cells", "turns", "clock", "coins", "combos", "gridref", "corners", "plane", "mirror"].includes(x))) return [ICON.tap, "Tap"];
+    if (k.some((x) => ["choose", "select", "order", "balance", "shade", "stack", "classify", "sides", "pv", "areagrid", "numchart", "shop", "reveal", "group", "pack", "array", "calendar", "cells", "turns", "clock", "coins", "combos", "gridref", "corners", "plane", "mirror", "bar", "fold", "scale", "bargraph"].includes(x))) return [ICON.tap, "Tap"];
     if (k.length) return [ICON.type, "Type"];
     return [ICON.talk, "Discuss"];
   }

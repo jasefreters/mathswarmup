@@ -17,7 +17,8 @@ The teacher's rule: **each question is optimised for interactivity.** When addin
    - Area by counting squares → `areagrid`. Arrays and the turnaround fact → `array`. Sharing or packing → `pack`.
    - Angles → `angle` (drag the arm; `names` for acute/obtuse/straight/reflex) or `corners` (tap a corner of a drawn shape to lay a right-angle tester on it, tap again to name it).
    - Symmetry → `mirror` (tap a dashed line to fold the shape over it). Coordinates → `plane` (Cartesian) or `gridref` (map grid).
-   - Money → `coins` or `shop`. Combinations → `combos`. Calendars, clocks and number charts → `calendar`, `clock`, `numchart`, `cells`.
+   - Part–part–whole word problems → `bar` (bar model; tap a ? to reveal the unknown). Missing numbers in equations → `scale` (a balance that levels when both sides are equal). Folding paper strips → `fold`. Reading graphs → `bargraph` (tap a bar to run a guide line to the scale). Pictures of shaded parts → `shade` with `pre` so the class reads the picture.
+   - Money → `coins` (`mix: true` requires gold and silver) or `shop`. Combinations → `combos`. Calendars, clocks and number charts → `calendar`, `clock`, `numchart`, `cells`.
 2. **Typing (`input`, `fractions`, `pair`, `sum6`) is for the final number only**, after the students have manipulated the visual. It is never the only interaction when there is a picture to work with.
 3. **Word problems** get a `cubes` field (`ops`, optional `also` and `note`, and two `solve` methods). The teacher marks numbers, the question and key words live in class. Never pre-set the words or numbers to mark.
 4. **Open discussion questions** are the exception. Use them only when there is genuinely nothing to manipulate.
