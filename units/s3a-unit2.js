@@ -183,14 +183,12 @@ UNITS.push({
             { p: "77,258 136,258 136,319 77,319", a: "A", fill: "#EEF2F8", deco: "<polygon points='77,258 136,258 136,319 77,319' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
             { p: "77,319 136,319 136,378 77,378", a: "A", fill: "#EEF2F8", deco: "<polygon points='77,319 136,319 136,378 77,378' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
             { p: "15,198 77,198 77,258 15,258", a: "A", fill: "#EEF2F8", deco: "<polygon points='15,198 77,198 77,258 15,258' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
-            { p: "286,15 345,15 345,75 286,75", a: "B", fill: "#EEF2F8", deco: "<polygon points='286,15 345,15 345,75 286,75' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
-            { p: "286,75 345,75 345,136 286,136", a: "B", fill: "#EEF2F8", deco: "<polygon points='286,75 345,75 345,136 286,136' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
-            { p: "286,136 345,136 345,197 286,197", a: "B", fill: "#EEF2F8", deco: "<polygon points='286,136 345,136 345,197 286,197' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
-            { p: "286,197 345,197 345,258 286,258", a: "B", fill: "#EEF2F8", deco: "<polygon points='286,197 345,197 345,258 286,258' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
-            { p: "286,258 345,258 345,319 286,319", a: "B", fill: "#EEF2F8", deco: "<polygon points='286,258 345,258 345,319 286,319' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
-            { p: "286,319 345,319 345,378 286,378", a: "B", fill: "#EEF2F8", deco: "<polygon points='286,319 345,319 345,378 286,378' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
-            { p: "174,136 286,136 286,197 174,197", a: "B", fill: "#EEF2F8", deco: "<polygon points='174,136 286,136 286,197 174,197' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
-            { p: "345,197 457,197 457,258 345,258", a: "B", fill: "#EEF2F8", deco: "<polygon points='345,197 457,197 457,258 345,258' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
+            { p: "286,30 346,30 346,120 286,120", a: "B", fill: "#EEF2F8", deco: "<polygon points='286,30 346,30 346,120 286,120' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
+            { p: "286,120 346,120 346,170 286,170", a: "B", fill: "#EEF2F8", deco: "<polygon points='286,120 346,120 346,170 286,170' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
+            { p: "286,170 346,170 346,260 286,260", a: "B", fill: "#EEF2F8", deco: "<polygon points='286,170 346,170 346,260 286,260' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
+            { p: "286,260 346,260 346,310 286,310", a: "B", fill: "#EEF2F8", deco: "<polygon points='286,260 346,260 346,310 286,310' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
+            { p: "236,30 286,30 286,120 236,120", a: "B", fill: "#EEF2F8", deco: "<polygon points='236,30 286,30 286,120 236,120' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
+            { p: "346,170 396,170 396,260 346,260", a: "B", fill: "#EEF2F8", deco: "<polygon points='346,170 396,170 396,260 346,260' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
             { p: "520,59 630,59 630,120 520,120", a: "C", fill: "#EEF2F8", deco: "<polygon points='520,59 630,59 630,120 520,120' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
             { p: "520,120 630,120 630,180 520,180", a: "C", fill: "#EEF2F8", deco: "<polygon points='520,120 630,120 630,180 520,180' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
             { p: "520,180 630,180 630,241 520,241", a: "C", fill: "#EEF2F8", deco: "<polygon points='520,180 630,180 630,241 520,241' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/>" },
@@ -200,11 +198,11 @@ UNITS.push({
             { p: "630,120 741,120 741,180 630,180", a: "C", fill: "#EEF2F8", deco: "<polygon points='630,120 741,120 741,180 630,180' fill='none' stroke='#17233F' stroke-width='2' stroke-dasharray='6 4' pointer-events='none'/><text x='106' y='408' class='co-lab'>A</text><text x='316' y='408' class='co-lab'>B</text><text x='575' y='392' class='co-lab'>C</text>" }] },
           { kind: "choose", rows: [
             { t: "Can net A fold into a rectangular prism?", options: ["Yes", "No"], a: 1 },
-            { t: "Can net B?", options: ["Yes", "No"], a: 1 },
+            { t: "Can net B?", options: ["Yes", "No"], a: 0 },
             { t: "Can net C?", options: ["Yes", "No"], a: 1 }] }
         ],
-        answer: "As drawn, **none** of them. A rectangular prism has 6 faces in 3 matching pairs. Net A has 6 squares, but 5 are in one strip, so the end squares overlap when folded. Net B has 8 faces and net C has 7 faces: too many.",
-        explain: "We counted the faces on the slide picture: A has 6, B has 8 and C has 7. If your slide answer differs, check the picture with the class. Removing the extra end faces from B or C would make them work."
+        answer: "Only **net B**. A rectangular prism has 6 faces in 3 matching pairs: B has 4 faces around the middle (two wide, two thin) and 2 matching ends. Net A has 6 squares, but 5 are in one strip, so the end squares overlap when folded. Net C has 7 faces: one too many.",
+        explain: "None of the nets on the slide could fold into a rectangular prism, so net B has been redrawn as a correct net."
       }
     ],
     // Review 5
