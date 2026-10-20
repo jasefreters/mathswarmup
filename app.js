@@ -1636,11 +1636,16 @@
   }
   function correctIndex(q) { return q.type === "mc" ? q.answer : q.answer ? 0 : 1; }
   function moveSpot(d) { const n = state.spot + d; if (n >= 0 && n < items().length) { state.spot = n; renderSpot(); } }
+  const ANSWER_KINDS = new Set(["input", "fractions", "sum6", "pair", "choose", "select", "order", "expr", "sentence", "cells", "scale"]);
   function runCheck() {
     const q = items()[state.spot].q, fb = $("spotBody").querySelector("[data-fb]");
     let ok = true, msg = null;
-    for (const el of $("spotBody").querySelectorAll("[data-part]")) {
-      const p = q.interact[+el.dataset.part]; if (!W[p.kind].check) continue;
+    // When a question has answer boxes or choices, they alone decide. The visual tools support the
+    // teacher's modelling and never block an answer; they decide only when they are the answer.
+    const els = [...$("spotBody").querySelectorAll("[data-part]")].filter((el) => W[q.interact[+el.dataset.part].kind].check);
+    const answers = els.filter((el) => ANSWER_KINDS.has(q.interact[+el.dataset.part].kind));
+    for (const el of answers.length ? answers : els) {
+      const p = q.interact[+el.dataset.part];
       const r = W[p.kind].check(el, p);
       if (r.ok === null) { fb.className = "feedback no"; fb.textContent = r.msg; return; }
       if (!r.ok) ok = false;

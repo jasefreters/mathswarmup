@@ -39,6 +39,7 @@ These are the teacher's decisions so far. Apply them to all new content without 
 - **Interactivity first** (see above). Redraw pictures as interactive SVG whenever students would work with them.
 - **Word problems:** no bold text in the prompt. Add a `cubes` field with `ops` (+ `also`/`note` where needed) and two `solve` methods. Circle, Underline and Box are teacher-led: the teacher taps the words live, and adjacent words join into one shape. Never pre-set the words or numbers to mark.
 - **Perimeter:** tap-the-sides with dimension arrows, no running total (see above).
+- **Tools never block an answer:** when a question has answer parts (`input`, `choose`, `select`, `order`, `expr`, `sentence`, `cells`, `scale`, `pair`, `fractions`, `sum6`), only those decide Check. The visual tools are for the teacher's modelling and are ignored if untouched. They decide only when the question has no answer parts.
 - **Done state:** a correct Check (or the correct multiple-choice or true/false option) marks the question done. The card plays confetti on return to the board and stays green with a Done badge. Questions with no check are done when the answer is shown.
 - **Timer** is visible on the board and inside every question.
 - **No faux bold:** the school font has one weight. School-font text is set to regular weight with `font-synthesis: none`, and answer emphasis is a soft highlight, not bold.
