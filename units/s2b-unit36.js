@@ -136,7 +136,7 @@ UNITS.push({
         type: "sr", focus: "Partitioned fractions B",
         prompt: "If this is [1/6] of the jug, **build the whole jug**.",
         img: "jug-sixth.png",
-        interact: [{ kind: "stack", label: "[1/6]", target: 6 }],
+        interact: [{ kind: "stack", label: "[1/6]", target: 6, done: "6 sixths make one whole jug!" }],
         answer: "The whole jug is **6 sixths** — 6 times as tall as the part shown."
       },
       {

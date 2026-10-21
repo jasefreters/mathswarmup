@@ -546,7 +546,7 @@
         el.querySelector("[data-rem]").onclick = () => { if (st.children.length > 1) st.lastElementChild.remove(); upd(); };
         upd();
       },
-      check(el, p) { const n = el.querySelector("[data-stack]").children.length; return { ok: n === p.target, msg: n === p.target ? "6 sixths make one whole jug!" : n + " parts is " + (n < p.target ? "not enough" : "too many") + " for a whole." }; }
+      check(el, p) { const n = el.querySelector("[data-stack]").children.length; return { ok: n === p.target, msg: n === p.target ? (p.done || n + " parts make one whole!") : n + " parts is " + (n < p.target ? "not enough" : "too many") + " for a whole." }; }
     },
     // Open number line: the teacher adds jumps to model counting on or back. Landing points are shown, the total of the jumps is not.
     jumps: {
