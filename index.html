@@ -635,6 +635,20 @@ footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; dis
 .bg-bar { cursor: pointer; stroke: transparent; stroke-width: 3; }
 .bg-bar.on { stroke: #D9480F; }
 .bg-guide { stroke: #D9480F; stroke-width: 3; stroke-dasharray: 8 5; pointer-events: none; }
+.co-name.dark { fill: #17233F; }
+.bg-line { fill: none; stroke-width: 4; }
+.bg-dot { cursor: pointer; stroke: #fff; stroke-width: 2; }
+.bg-dot.on { stroke: #D9480F; stroke-width: 4; }
+/* tally chart */
+.ty { display: grid; gap: 8px; max-width: 620px; }
+.ty-row { display: grid; grid-template-columns: minmax(80px, auto) 1fr auto auto; align-items: center; gap: 12px; border: 2px solid var(--line); border-radius: 12px; padding: 6px 12px; background: var(--card); }
+.ty-l { font-family: var(--f-school); font-size: 1.2em; }
+.ty-m { display: flex; flex-wrap: wrap; gap: 12px; min-height: 40px; align-items: center; }
+.ty-1, .ty-g5 > i { display: inline-block; width: 4px; height: 34px; background: var(--ink); border-radius: 2px; }
+.ty-g5 { position: relative; display: inline-flex; gap: 7px; }
+.ty-g5::after { content: ""; position: absolute; left: -6px; right: -6px; top: 50%; height: 4px; background: var(--ink); border-radius: 2px; transform: rotate(-24deg); }
+.ty-b { display: inline-flex; gap: 4px; }
+.ty-n { font-family: var(--f-display); font-size: 1.3em; min-width: 1.5em; text-align: right; }
 </style>
 </head>
 <body>
@@ -686,29 +700,29 @@ footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; dis
   <div class="spot-main"><div class="wrap" id="spotBody"></div></div>
 </div>
 
-<script src="config.js?v=202610201950"></script>
-<script src="scope.js?v=202610201950"></script>
-<script src="units/s2a-unit1.js?v=202610201950"></script>
-<script src="units/s3a-unit1.js?v=202610201950"></script>
-<script src="units/s3a-unit16.js?v=202610201950"></script>
-<script src="units/s2b-unit36.js?v=202610201950"></script>
-<script src="units/s2b-unit21.js?v=202610201950"></script>
-<script src="units/s3b-unit21.js?v=202610201950"></script>
-<script src="units/s2a-unit2.js?v=202610201950"></script>
-<script src="units/s2b-unit22.js?v=202610201950"></script>
-<script src="units/s3a-unit2.js?v=202610201950"></script>
-<script src="units/s3b-unit22.js?v=202610201950"></script>
-<script src="units/s2a-unit3.js?v=202610201950"></script>
-<script src="units/s2b-unit23.js?v=202610201950"></script>
-<script src="units/s3a-unit3.js?v=202610201950"></script>
-<script src="units/s3b-unit23.js?v=202610201950"></script>
-<script src="units/s2b-unit24.js?v=202610201950"></script>
-<script src="units/s2a-unit5.js?v=202610201950"></script>
-<script src="units/s2a-unit4.js?v=202610201950"></script>
-<script src="units/s2b-unit25.js?v=202610201950"></script>
-<script src="units/s3a-unit5.js?v=202610201950"></script>
-<script src="units/s3b-unit24.js?v=202610201950"></script>
-<script src="units/s3a-unit4.js?v=202610201950"></script>
-<script src="app.js?v=202610201950"></script>
+<script src="config.js?v=202610210315"></script>
+<script src="scope.js?v=202610210315"></script>
+<script src="units/s2a-unit1.js?v=202610210315"></script>
+<script src="units/s3a-unit1.js?v=202610210315"></script>
+<script src="units/s3a-unit16.js?v=202610210315"></script>
+<script src="units/s2b-unit36.js?v=202610210315"></script>
+<script src="units/s2b-unit21.js?v=202610210315"></script>
+<script src="units/s3b-unit21.js?v=202610210315"></script>
+<script src="units/s2a-unit2.js?v=202610210315"></script>
+<script src="units/s2b-unit22.js?v=202610210315"></script>
+<script src="units/s3a-unit2.js?v=202610210315"></script>
+<script src="units/s3b-unit22.js?v=202610210315"></script>
+<script src="units/s2a-unit3.js?v=202610210315"></script>
+<script src="units/s2b-unit23.js?v=202610210315"></script>
+<script src="units/s3a-unit3.js?v=202610210315"></script>
+<script src="units/s3b-unit23.js?v=202610210315"></script>
+<script src="units/s2b-unit24.js?v=202610210315"></script>
+<script src="units/s2a-unit5.js?v=202610210315"></script>
+<script src="units/s2a-unit4.js?v=202610210315"></script>
+<script src="units/s2b-unit25.js?v=202610210315"></script>
+<script src="units/s3a-unit5.js?v=202610210315"></script>
+<script src="units/s3b-unit24.js?v=202610210315"></script>
+<script src="units/s3a-unit4.js?v=202610210315"></script>
+<script src="app.js?v=202610210315"></script>
 </body>
 </html>

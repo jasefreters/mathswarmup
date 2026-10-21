@@ -249,6 +249,8 @@
     p.cols.forEach((k, i) => { const n = PV_HOUSE[k][0], g = out[out.length - 1]; if (g && g.name === n) g.cols.push(i); else out.push({ name: n, cols: [i], unit: HOUSE_INFO[n][0], word: HOUSE_INFO[n][1] }); });
     return out;
   }
+  // True for pale fills, so labels drawn on them switch to dark text.
+  function lightFill(c) { const m = /^#([0-9a-f]{6})$/i.exec(c || ""); if (!m) return false; const n = parseInt(m[1], 16); return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) > 150; }
   function jFmt(p, v) {
     if (p.time) { const t = ((Math.round(v) % 1440) + 1440) % 1440, hh = Math.floor(t / 60), mm = String(t % 60).padStart(2, "0"); return p.time === "24" ? String(hh).padStart(2, "0") + mm : (hh % 12 || 12) + ":" + mm + (p.ampm ? (hh >= 12 ? " pm" : " am") : ""); }
     if (p.money) return "$" + v.toFixed(2);
@@ -756,7 +758,8 @@
     // Bar graph: tap a bar to run a guide line across to the scale.
     bargraph: {
       html(p, pv) {
-        const W_ = 640, H = 362, L = 70, B = 290, T = 20, R = 20 + (p.legendW || 150), ph = B - T, X0 = L, X1 = W_ - R;
+        const one = p.series.length === 1, tilt = p.groups.length > 5;
+        const W_ = 640, H = 362 + (tilt ? 22 : 0), L = 70, B = 290, T = 20, R = 20 + (one ? 0 : p.legendW || 150), ph = B - T, X0 = L, X1 = W_ - R;
         const y = (v) => B - (v / p.max) * ph, gw = (X1 - X0) / p.groups.length, ns = p.series.length, bw = Math.min(46, (gw * 0.7) / ns);
         let s = "<svg viewBox='0 0 " + W_ + " " + H + "' class='bg' role='img' aria-label='" + esc(p.label || "Bar graph") + "'>";
         if (p.minor) for (let v = 0; v <= p.max; v += p.minor) s += "<line class='bg-mi' x1='" + X0 + "' x2='" + X1 + "' y1='" + y(v) + "' y2='" + y(v) + "'/>";
@@ -764,23 +767,49 @@
         s += "<line class='bg-ax' x1='" + X0 + "' y1='" + T + "' x2='" + X0 + "' y2='" + B + "'/><line class='bg-ax' x1='" + X0 + "' y1='" + B + "' x2='" + X1 + "' y2='" + B + "'/><g data-bgg></g>";
         p.groups.forEach((g, gi) => {
           const cx = X0 + gw * (gi + 0.5), x0 = cx - (bw * ns + 8 * (ns - 1)) / 2;
-          g.v.forEach((v, si) => { const x = x0 + si * (bw + 8); s += "<rect class='bg-bar' data-bgb='" + gi + "-" + si + "' x='" + x + "' y='" + y(v) + "' width='" + bw + "' height='" + (B - y(v)) + "' fill='" + p.series[si].c + "'" + (pv ? " style='pointer-events:none'" : "") + "/>"; });
-          s += "<text class='bg-l' x='" + cx + "' y='" + (B + 24) + "'>" + esc(g.l) + "</text>";
+          if (!p.line) g.v.forEach((v, si) => { const x = x0 + si * (bw + 8); s += "<rect class='bg-bar' data-bgb='" + gi + "-" + si + "' x='" + x + "' y='" + y(v) + "' width='" + bw + "' height='" + (B - y(v)) + "' fill='" + (g.c || p.series[si].c) + "'" + (pv ? " style='pointer-events:none'" : "") + "/>"; });
+          s += tilt ? "<text class='bg-l' text-anchor='end' transform='translate(" + (cx + 6) + " " + (B + 18) + ") rotate(-35)'>" + esc(g.l) + "</text>" : "<text class='bg-l' x='" + cx + "' y='" + (B + 24) + "'>" + esc(g.l) + "</text>";
         });
-        p.series.forEach((se, si) => { s += "<rect x='" + (X1 + 24) + "' y='" + (T + 10 + si * 30) + "' width='20' height='20' fill='" + se.c + "'/><text class='bg-lg' x='" + (X1 + 52) + "' y='" + (T + 26 + si * 30) + "'>" + esc(se.l) + "</text>"; });
+        // Line graph: points joined in order; each point is tappable like a bar.
+        if (p.line) p.series.forEach((se, si) => {
+          const pts = p.groups.map((g, gi) => [X0 + gw * (gi + 0.5), y(g.v[si])]);
+          s += "<polyline class='bg-line' points='" + pts.map((q) => q.join(",")).join(" ") + "' stroke='" + se.c + "'/>";
+          pts.forEach((q, gi) => { s += "<rect class='bg-bar bg-pt' data-bgb='" + gi + "-" + si + "' x='" + (q[0] - 9) + "' y='" + q[1] + "' width='18' height='0' fill='none'/><circle class='bg-dot' cx='" + q[0] + "' cy='" + q[1] + "' r='8' fill='" + se.c + "' data-bgd='" + gi + "-" + si + "'" + (pv ? " style='pointer-events:none'" : "") + "/>"; });
+        });
+        if (!one) p.series.forEach((se, si) => { s += "<rect x='" + (X1 + 24) + "' y='" + (T + 10 + si * 30) + "' width='20' height='20' fill='" + se.c + "'/><text class='bg-lg' x='" + (X1 + 52) + "' y='" + (T + 26 + si * 30) + "'>" + esc(se.l) + "</text>"; });
         if (p.ylabel) s += "<text class='bg-al' transform='translate(20 " + (T + ph / 2) + ") rotate(-90)'>" + esc(p.ylabel) + "</text>";
         if (p.xlabel) s += "<text class='bg-al' x='" + (X0 + X1) / 2 + "' y='" + (H - 6) + "'>" + esc(p.xlabel) + "</text>";
-        return (pv ? "" : "<p class='ph'>" + esc(p.hint || "Tap a bar to run a line across to the scale.") + "</p>") + "<div class='bg-pic'>" + s + "</svg></div>";
+        return (pv ? "" : "<p class='ph'>" + esc(p.hint || (p.line ? "Tap a point to run a line across to the scale." : "Tap a bar to run a line across to the scale.")) + "</p>") + "<div class='bg-pic'>" + s + "</svg></div>";
       },
       init(el, p) {
         const on = new Set(), B = 290, T = 20, ph = B - T;
         el.addEventListener("click", (e) => {
-          const b = e.target.closest("[data-bgb]"); if (!b) return;
+          const d = e.target.closest("[data-bgd]"), b = d ? el.querySelector("[data-bgb='" + d.dataset.bgd + "']") : e.target.closest("[data-bgb]"); if (!b) return;
           const k = b.dataset.bgb; on.has(k) ? on.delete(k) : on.add(k);
           el.querySelectorAll("[data-bgb]").forEach((r) => r.classList.toggle("on", on.has(r.dataset.bgb)));
+          el.querySelectorAll("[data-bgd]").forEach((r) => r.classList.toggle("on", on.has(r.dataset.bgd)));
           let h = ""; on.forEach((k2) => { const r = el.querySelector("[data-bgb='" + k2 + "']"), yy = +r.getAttribute("y"); h += "<line class='bg-guide' x1='70' x2='" + (+r.getAttribute("x") + +r.getAttribute("width")) + "' y1='" + yy + "' y2='" + yy + "'/>"; });
           el.querySelector("[data-bgg]").innerHTML = h; void ph; void T;
         });
+      }
+    },
+    // Tally chart: tap + to add a tally mark; every fifth mark crosses the four before it.
+    tally: {
+      html(p, pv) {
+        if (pv) return "";
+        return "<p class='ph'>" + esc(p.hint || "Tap + to add a tally mark, − to take one away.") + "</p><div class='ty'>" + p.rows.map((r, i) => "<div class='ty-row'><span class='ty-l'>" + fmt(r.l) + "</span><span class='ty-m' data-tym='" + i + "'></span><span class='ty-b'><button class='pv-b' data-ty='-' data-i='" + i + "' aria-label='Remove a mark'>−</button><button class='pv-b' data-ty='+' data-i='" + i + "' aria-label='Add a mark'>+</button></span>" + (p.counts ? "<b class='ty-n' data-tyn='" + i + "'></b>" : "") + "</div>").join("") + "</div>";
+      },
+      init(el, p) {
+        el._t = p.rows.map((r) => r.start || 0);
+        const marks = (n) => { let h = ""; for (let g = 0; g < Math.floor(n / 5); g++) h += "<i class='ty-g5'><i></i><i></i><i></i><i></i></i>"; for (let k = 0; k < n % 5; k++) h += "<i class='ty-1'></i>"; return h; };
+        const upd = () => el._t.forEach((n, i) => { el.querySelector("[data-tym='" + i + "']").innerHTML = marks(n); const c = el.querySelector("[data-tyn='" + i + "']"); if (c) c.textContent = n; });
+        el.addEventListener("click", (e) => { const b = e.target.closest("[data-ty]"); if (!b) return; const i = +b.dataset.i; el._t[i] = Math.max(0, el._t[i] + (b.dataset.ty === "+" ? 1 : -1)); upd(); });
+        upd();
+      },
+      check(el, p) {
+        if (!p.rows.some((r) => r.a != null)) return { ok: true };
+        const ok = p.rows.every((r, i) => r.a == null || el._t[i] === r.a);
+        return { ok, msg: ok ? null : "Count the tally marks in each row again." };
       }
     },
     // Corner tester: tap a corner to lay a right-angle tester on it, tap again to name the angle.
@@ -789,7 +818,7 @@
         let svg = "<svg viewBox='0 0 " + p.view[0] + " " + p.view[1] + "' class='co' role='img' aria-label='" + esc(p.label || "Shapes with corners to test") + "'>";
         p.shapes.forEach((sh, si) => {
           svg += "<polygon points='" + sh.p.map((q) => q.join(",")).join(" ") + "' fill='" + (sh.fill || "#0B2A6B") + "' class='co-shape'/>";
-          if (sh.l) { const cx = sh.p.reduce((a, q) => a + q[0], 0) / sh.p.length, cy = sh.p.reduce((a, q) => a + q[1], 0) / sh.p.length; svg += "<text x='" + (sh.lx ?? cx) + "' y='" + (sh.ly ?? cy) + "' class='co-name'>" + esc(sh.l) + "</text>"; }
+          if (sh.l) { const cx = sh.p.reduce((a, q) => a + q[0], 0) / sh.p.length, cy = sh.p.reduce((a, q) => a + q[1], 0) / sh.p.length; svg += "<text x='" + (sh.lx ?? cx) + "' y='" + (sh.ly ?? cy) + "' class='co-name" + (lightFill(sh.fill || "#0B2A6B") ? " dark" : "") + "'>" + esc(sh.l) + "</text>"; }
           svg += "<g data-cog='" + si + "'></g>";
           (sh.marks || sh.p.map((_, v) => ({ v }))).forEach((m, mi) => {
             const [x, y] = sh.p[m.v];
@@ -1465,7 +1494,7 @@
     const k = (q.interact || []).map((p) => p.kind);
     if (k.includes("numberline") || k.includes("marker") || k.includes("jumps") || k.includes("angle")) return [ICON.drag, "Drag"];
     if (k.includes("sketch")) return [ICON.draw, "Draw"];
-    if (k.some((x) => ["choose", "select", "order", "balance", "shade", "stack", "classify", "sides", "pv", "areagrid", "numchart", "shop", "reveal", "group", "pack", "array", "calendar", "cells", "turns", "clock", "coins", "combos", "gridref", "corners", "plane", "mirror", "bar", "fold", "scale", "bargraph"].includes(x))) return [ICON.tap, "Tap"];
+    if (k.some((x) => ["choose", "select", "order", "balance", "shade", "stack", "classify", "sides", "pv", "areagrid", "numchart", "shop", "reveal", "group", "pack", "array", "calendar", "cells", "turns", "clock", "coins", "combos", "gridref", "corners", "plane", "mirror", "bar", "fold", "scale", "bargraph", "tally"].includes(x))) return [ICON.tap, "Tap"];
     if (k.length) return [ICON.type, "Type"];
     return [ICON.talk, "Discuss"];
   }
