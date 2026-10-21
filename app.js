@@ -68,8 +68,9 @@
     set.has(i) ? set.delete(i) : set.add(i);
     drawMarks();
   }
-  function drawMarks() {
-    const q = $("spotBody").querySelector(".q");
+  function drawMarks(root) {
+    root = root || $("spotBody");
+    const q = root.querySelector(".q");
     if (!q) return;
     let layer = q.querySelector(".marks");
     if (!layer) { layer = document.createElement("div"); layer.className = "marks"; q.appendChild(layer); }
@@ -100,11 +101,11 @@
         any = true;
       });
     });
-    const clr = $("spotBody").querySelector("[data-clearmarks]");
+    const clr = root.querySelector("[data-clearmarks]");
     if (clr) clr.hidden = !any;
   }
-  function onOp(b) {
-    const c = items()[state.spot].q.cubes, op = b.dataset.op, box = b.closest("[data-panel]"), fb = box.querySelector("[data-opfb]");
+  function onOp(b, qq) {
+    const c = (qq || items()[state.spot].q).cubes, op = b.dataset.op, box = b.closest("[data-panel]"), fb = box.querySelector("[data-opfb]");
     const good = c.ops.includes(op) || (c.also || []).includes(op);
     b.classList.remove("ok", "no"); b.classList.add(good ? "ok" : "no");
     const picked = [...box.querySelectorAll(".op.ok")].map((x) => x.dataset.op);
@@ -1713,6 +1714,9 @@
     if (t.closest("#spotBody [data-check]")) { runCheck(); return; }
     if (t.closest("#spotBody [data-reset]")) { renderSpot(); return; }
   });
+  // The game page reuses the question engine; it has no board, so it stops here.
+  window.DD = { W, fmt, esc, tokenText, cubesHTML, onCube, onToken, drawMarks, resetMarks, marks, onOp, ANSWER_KINDS, correctIndex, optHTML, answerHTML, confetti, ICON };
+  if (!$("board")) return;
   $("board").addEventListener("keydown", (e) => { const tile = e.target.closest(".tile"); if (tile && e.target === tile && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openSpot(+tile.dataset.i); } });
   $("spotBody").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.matches(".inp")) { e.preventDefault(); runCheck(); } });
   function toggleAnswers() { const on = document.body.classList.toggle("answers"); $("bAns").setAttribute("aria-pressed", on); }
