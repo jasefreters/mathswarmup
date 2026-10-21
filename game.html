@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dash Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Edu+NSW+ACT+Foundation:wght@400..700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
+<link rel="stylesheet" href="styles.css?v=202610211510">
+<style>
+/* Dash Quest: the class climbs a mountain together. Five camps a day, one question per camp, the summit at the end.
+   Built on the Daily Dash tokens and question tools; only the game layer is styled here. */
+:root {
+  --sky: #DCE8FF; --sky2: #F4F6FA; --rock: #8C9AB8; --snow: #FFFFFF; --trail: #FFE45C; --gem: #22A06B; --heart: #E5484D; --boss: #7B3FC4; --boss-soft: #EFE5FB;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sky: #1B2A4A; --sky2: #0F1524; --rock: #3C4A68; --snow: #C9D4EC; --trail: #FFD93D; --gem: #4CC38A; --heart: #FF6B6B; --boss: #B98BF0; --boss-soft: #2E2245; } }
+:root[data-theme="dark"] { --sky: #1B2A4A; --sky2: #0F1524; --rock: #3C4A68; --snow: #C9D4EC; --trail: #FFD93D; --gem: #4CC38A; --heart: #FF6B6B; --boss: #B98BF0; --boss-soft: #2E2245; }
+body { background: var(--paper); }
+.gwrap { max-width: 1180px; margin: 0 auto; padding-block: 18px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+.gtop { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.glogo { font-family: var(--f-display); font-weight: 800; font-size: 1.5rem; margin: 0; display: flex; align-items: center; gap: 8px; }
+.glogo svg { width: 34px; height: 34px; }
+.glogo span { background: var(--hi); color: var(--hi-ink); padding: 0 6px; border-radius: 6px; }
+.gyears { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+.gyears button { border: 0; background: transparent; border-radius: 9px; padding: 8px 14px; font: 700 1rem var(--f-display); color: var(--muted); }
+.gyears button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.gtop .back { margin-left: auto; }
+.gh1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(1.6rem, 3.4vw, 2.3rem); margin: 0; text-wrap: balance; }
+.gsub { color: var(--muted); margin: 4px 0 0; }
+
+/* day picker */
+.gdays { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .gdays { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.gtop .back { text-decoration: none; }
+.dcard { text-align: left; border: 2px solid var(--line); background: var(--card); border-radius: 16px; padding: 14px 16px; display: grid; gap: 6px; cursor: pointer; font: inherit; color: inherit; }
+.dcard:hover { border-color: var(--accent); }
+.dcard .wk { font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: var(--accent); }
+.dcard b { font: 800 1.25rem var(--f-display); }
+.dcard .stars { color: #E8A500; font-size: 1.2rem; letter-spacing: 2px; }
+.dcard .stars i { color: var(--line); font-style: normal; }
+.dcard .boss { font-size: .85rem; color: var(--boss); font-weight: 700; }
+.setup { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; }
+.setup label { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+.setup input { width: 4.5em; }
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.how div { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 4px; }
+.how b { font: 800 1rem var(--f-display); }
+.how span { color: var(--muted); font-size: .92rem; }
+
+/* quest HUD */
+.hud { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 10px 14px; box-shadow: var(--shadow); }
+.hud .stat { display: inline-flex; align-items: center; gap: 6px; font: 800 1.15rem var(--f-display); font-variant-numeric: tabular-nums; }
+.hud .lbl { font: 700 .7rem var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.hearts i { font-style: normal; color: var(--heart); font-size: 1.35rem; transition: transform .2s; }
+.hearts i.lost { color: var(--line); }
+.gems { color: var(--gem); }
+.clock.over { color: var(--bad); }
+.powers { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.pw { display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 12px; font: 700 .9rem var(--f-body); color: inherit; }
+.pw:disabled { opacity: .4; }
+.pw:not(:disabled):hover { border-color: var(--accent); }
+.player { font: 800 1.1rem var(--f-display); background: var(--hi); color: var(--hi-ink); border-radius: 999px; padding: 4px 14px; }
+
+/* mountain trail */
+.trail { background: linear-gradient(var(--sky), var(--sky2)); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.trail svg { display: block; width: 100%; height: auto; max-height: 230px; }
+.mt { fill: var(--rock); } .mt2 { fill: var(--rock); opacity: .55; } .snowcap { fill: var(--snow); }
+.path { fill: none; stroke: var(--trail); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 2 12; }
+.path-done { fill: none; stroke: var(--trail); stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset .8s ease; }
+.camp circle { fill: var(--card); stroke: var(--ink); stroke-width: 3; }
+.camp text { font: 800 15px var(--f-display); fill: var(--ink); text-anchor: middle; dominant-baseline: middle; }
+.camp.done circle { fill: var(--gem); stroke: var(--gem); } .camp.done text { fill: #fff; }
+.camp.skip circle { fill: var(--sunk); stroke: var(--muted); } .camp.skip text { fill: var(--muted); }
+.camp.now circle { fill: var(--hi); stroke: var(--ink); }
+.camp.boss circle { stroke: var(--boss); stroke-width: 4; }
+.flag { transition: transform .8s ease; }
+.summitflag { fill: var(--heart); }
+
+/* round card */
+.round { display: grid; gap: 14px; }
+.rhead { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.rtype { font: 800 .8rem var(--f-body); letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; padding: 5px 12px; background: var(--accent-soft); color: var(--accent); }
+.rtype.boss { background: var(--boss-soft); color: var(--boss); }
+.rtype.talk { background: var(--hi-soft); color: var(--hi-ink); }
+.rtype.build { background: var(--ok-soft); color: var(--ok); }
+.rname { font: 800 1.3rem var(--f-display); }
+.rpts { margin-left: auto; font-weight: 700; color: var(--gem); }
+.think { height: 10px; background: var(--sunk); border-radius: 5px; overflow: hidden; }
+.think i { display: block; height: 100%; background: var(--accent); width: 100%; transition: width 1s linear; }
+.thinklbl { font-size: .85rem; color: var(--muted); margin-top: -8px; }
+.bossbar { display: grid; gap: 8px; background: var(--boss-soft); border-radius: 14px; padding: 12px 14px; }
+.bossbar .who { display: flex; align-items: center; gap: 12px; font: 800 1.05rem var(--f-display); color: var(--boss); }
+.bossbar svg { width: 46px; height: 46px; flex: none; transition: transform .2s; }
+.bossbar.hit svg { animation: wob .4s; }
+@keyframes wob { 30% { transform: rotate(-12deg) scale(.92); } 70% { transform: rotate(9deg); } }
+.hp { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.hp i { height: 16px; border-radius: 4px; background: var(--boss); display: grid; place-items: center; font: 800 .65rem var(--f-body); color: #fff; font-style: normal; transition: background .3s, opacity .3s; }
+.hp i.gone { background: var(--line); color: var(--muted); }
+.bossbar small { color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; box-shadow: var(--shadow); }
+.card.shake { animation: shake .4s; }
+@keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.card .tile { border: 0; padding: 0; box-shadow: none; background: transparent; }
+.next { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.toast { font: 800 1.15rem var(--f-display); color: var(--gem); }
+.toast.no { color: var(--heart); }
+.hintbox { background: var(--hi-soft); border-radius: 12px; padding: 10px 14px; }
+.opt.gone { opacity: .25; pointer-events: none; text-decoration: line-through; }
+
+/* summit */
+.summit { text-align: center; display: grid; gap: 14px; justify-items: center; padding: 30px 16px; position: relative; overflow: hidden; }
+.summit .big { font-size: 3rem; color: #E8A500; letter-spacing: 6px; }
+.summit .big i { color: var(--line); font-style: normal; }
+.tally { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.tally div { background: var(--sunk); border-radius: 14px; padding: 10px 16px; display: grid; gap: 2px; min-width: 120px; }
+.tally b { font: 800 1.5rem var(--f-display); font-variant-numeric: tabular-nums; }
+.tally span { color: var(--muted); font-size: .85rem; }
+.review { width: 100%; max-width: 640px; display: grid; gap: 6px; text-align: left; }
+.review div { display: flex; gap: 10px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.review .r { margin-left: auto; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .card.shake, .bossbar.hit svg { animation: none; } .path-done, .flag { transition: none; } }
+</style>
+</head>
+<body>
+<main class="gwrap" id="game">
+  <header class="gtop">
+    <p class="glogo"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M3 34 L15 12 L21 22 L26 15 L37 34 Z" fill="#8C9AB8"/><path d="M15 12 L19 19 L16 18 L13 20 Z" fill="#fff"/><path d="M26 5 V15" stroke="#17233F" stroke-width="2"/><path d="M26 5 L34 8 L26 11 Z" fill="#E5484D"/></svg>Dash <span>Quest</span></p>
+    <nav class="gyears" id="gyears" aria-label="Year"></nav>
+    <a class="btn back" href="index.html">Daily Dash board</a>
+  </header>
+  <div id="screen"></div>
+</main>
+
+<script src="config.js?v=202610211510"></script>
+<script src="scope.js?v=202610211510"></script>
+<script src="units/s2a-unit1.js?v=202610211510"></script>
+<script src="units/s2b-unit21.js?v=202610211510"></script>
+<script src="units/s3a-unit1.js?v=202610211510"></script>
+<script src="units/s3b-unit21.js?v=202610211510"></script>
+<script src="app.js?v=202610211510"></script>
+<script>
+(function () {
+  "use strict";
+  const DD = window.DD, W = DD.W, fmt = DD.fmt, esc = DD.esc;
+  const $ = (id) => document.getElementById(id), scr = $("screen");
+  const DAYN = ["Monday", "Tuesday", "Wednesday", "Thursday"];
+  const BOSSES = ["Muddle Monster", "Number Gobbler", "Fog Goblin", "Riddle Yeti", "Tangle Troll", "Mix-up Moth", "Puzzle Pirate", "Quibble Crab"];
+  const CAMPS = ["Base Camp", "Pine Ridge", "Eagle Ledge", "Ice Bridge", "Cloud Camp"];
+  const store = {
+    get() { try { return JSON.parse(localStorage.getItem("dashquest") || "{}"); } catch (e) { return {}; } },
+    set(v) { try { localStorage.setItem("dashquest", JSON.stringify(v)); } catch (e) {} }
+  };
+  const saved = store.get();
+  const G = { year: saved.year || 3, classSize: saved.classSize || 26, run: null };
+  const unitFor = (y) => { const c = YEARS.find((x) => x.year === y); return UNITS.find((u) => u.stage === c.stage && u.ab === c.ab && u.term === 1 && u.ls === 1); };
+  const best = (y, d) => ((store.get().best || {})[y + "-" + d] || 0);
+  const starsHTML = (n) => "★".repeat(n) + "<i>" + "★".repeat(3 - n) + "</i>";
+  const roundKind = (q) => q.type !== "sr" ? "vote" : q.cubes ? "boss" : (q.interact || []).some((p) => W[p.kind].check) ? "build" : "talk";
+  const KIND = { vote: ["Quick vote", "Vote together, then lock in"], build: ["Build it", "Use the tool, then check"], boss: ["Boss battle", "Beat the boss with CUBES"], talk: ["Talk tactics", "Share your thinking with a partner"] };
+  const PTS = { vote: 100, build: 150, boss: 250, talk: 60 };
+
+  function nav() {
+    $("gyears").innerHTML = YEARS.map((y) => "<button data-gy='" + y.year + "' aria-pressed='" + (y.year === G.year) + "'>Year " + y.year + "</button>").join("");
+  }
+
+  // ---------- day picker ----------
+  function pick() {
+    G.run = null; nav();
+    const u = unitFor(G.year), y = YEARS.find((x) => x.year === G.year);
+    scr.innerHTML = "<div class='gwrap' style='padding:0'>" +
+      "<div><h1 class='gh1'>Year " + G.year + " · Term 1, Weeks 1–2</h1><p class='gsub'>Stage " + y.stage + " " + y.ab + " · Unit " + u.unit + ". Pick today's climb. Every day is 5 camps and a summit, and the class plays as one team.</p></div>" +
+      "<div class='gdays'>" + u.reviews.map((r, d) => "<button class='dcard' data-gd='" + d + "'><span class='wk'>Week " + (1 + Math.floor(d / 4)) + "</span><b>" + DAYN[d % 4] + "</b><span class='stars' aria-label='" + best(G.year, d) + " of 3 stars'>" + starsHTML(best(G.year, d)) + "</span><span class='boss'>Boss: " + BOSSES[d] + "</span></button>").join("") + "</div>" +
+      "<div class='setup'><label for='gsize'>Students in the class <input class='inp' id='gsize' type='number' min='2' max='40' value='" + G.classSize + "'></label><span class='ph'>Used by Pick a player.</span></div>" +
+      "<div class='how'>" +
+      "<div><b>Quick vote</b><span>Multiple choice and true or false. Think while the bar runs down, then the class votes. Quicker answers earn more gems.</span></div>" +
+      "<div><b>Build it</b><span>Use the hands-on tool together, type the final answer and check it.</span></div>" +
+      "<div><b>Boss battle</b><span>Word problems. Each CUBES step knocks a chunk off the boss. A correct answer finishes it off.</span></div>" +
+      "<div><b>3 hearts</b><span>A wrong answer costs the team a heart, but you keep climbing. Hearts and the 5-minute dash clock decide your stars.</span></div>" +
+      "</div></div>";
+  }
+
+  // ---------- quest ----------
+  function start(d) {
+    const u = unitFor(G.year);
+    G.run = { u, d, i: 0, hearts: 3, gems: 0, began: Date.now(), extra: 0, results: [], powers: { hint: true, pick: true, time: true }, player: null, wrong: 0, solved: false, think: null, hp: null };
+    quest();
+  }
+  function trailSVG() {
+    const R = G.run, pts = [[70, 205], [230, 170], [390, 150], [550, 112], [710, 82]], top = [860, 30];
+    const all = pts.concat([top]), d = "M " + all.map((p) => p.join(" ")).join(" L ");
+    let s = "<svg viewBox='0 0 940 240' role='img' aria-label='Mountain trail: camp " + (R.i + 1) + " of 5'>";
+    s += "<path class='mt2' d='M 0 240 L 160 120 L 300 240 Z'/><path class='mt' d='M 0 240 L 860 20 L 940 70 L 940 240 Z'/><path class='snowcap' d='M 860 20 L 900 46 L 878 44 L 862 54 L 842 44 L 826 40 Z'/>";
+    s += "<path class='path' d='" + d + "'/>";
+    const len = all.slice(1).reduce((a, p, k) => a + Math.hypot(p[0] - all[k][0], p[1] - all[k][1]), 0);
+    const doneTo = Math.min(R.i, 5), dlen = all.slice(1, doneTo + 1).reduce((a, p, k) => a + Math.hypot(p[0] - all[k][0], p[1] - all[k][1]), 0);
+    s += "<path class='path-done' d='" + d + "' stroke-dasharray='" + len + "' stroke-dashoffset='" + (len - dlen) + "'/>";
+    s += "<g><path d='M " + top[0] + " " + top[1] + " V " + (top[1] - 26) + "' stroke='#17233F' stroke-width='3'/><path class='summitflag' d='M " + top[0] + " " + (top[1] - 26) + " l 22 7 l -22 7 z'/></g>";
+    pts.forEach((p, k) => {
+      const q = R.u.reviews[R.d][k], kind = roundKind(q);
+      const res = R.results[k], past = k < R.i;
+      s += "<g class='camp" + (past ? (res && !res.ok ? " skip" : " done") : k === R.i ? " now" : "") + (kind === "boss" ? " boss" : "") + "'><circle cx='" + p[0] + "' cy='" + p[1] + "' r='17'/><text x='" + p[0] + "' y='" + (p[1] + 1) + "'>" + (past ? (res && !res.ok ? "–" : "✓") : kind === "boss" ? "!" : k + 1) + "</text></g>";
+    });
+    const at = all[Math.min(R.i, 5)];
+    s += "<g class='flag' style='transform:translate(" + at[0] + "px," + (at[1] - 22) + "px)'><circle r='9' fill='#2449D8' stroke='#fff' stroke-width='2'/><text y='1' fill='#fff' font-size='10' font-weight='800' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'>US</text></g>";
+    return s + "</svg>";
+  }
+  function hudHTML() {
+    const R = G.run;
+    return "<div class='hud' id='hud'>" +
+      "<span class='stat'><span class='lbl'>Team</span><span class='hearts' aria-label='" + R.hearts + " hearts left'>" + [0, 1, 2].map((k) => "<i class='" + (k < R.hearts ? "" : "lost") + "'>♥</i>").join("") + "</span></span>" +
+      "<span class='stat gems'><span class='lbl'>Gems</span><span id='gGems'>" + R.gems + "</span></span>" +
+      "<span class='stat clock' id='gClockW'><span class='lbl'>Dash clock</span><span id='gClock'>5:00</span></span>" +
+      (R.player ? "<span class='player' aria-live='polite'>Player " + R.player + "!</span>" : "") +
+      "<span class='powers'><button class='pw' data-pw='hint'" + (R.powers.hint ? "" : " disabled") + ">💡 Hint</button><button class='pw' data-pw='pick'" + (R.powers.pick ? "" : " disabled") + ">🎯 Pick a player</button><button class='pw' data-pw='time'" + (R.powers.time ? "" : " disabled") + ">⏱ +1 minute</button><button class='pw' data-gquit>Leave climb</button></span></div>";
+  }
+  function quest() {
+    const R = G.run;
+    if (R.i >= 5) return summit();
+    const q = R.u.reviews[R.d][R.i], kind = roundKind(q);
+    R.wrong = 0; R.solved = false; R.hintShown = false;
+    DD.resetMarks();
+    let h = hudHTML() + "<div class='trail'>" + trailSVG() + "</div><section class='round'>" +
+      "<div class='rhead'><span class='rtype " + kind + "'>" + KIND[kind][0] + "</span><span class='rname'>Camp " + (R.i + 1) + " · " + CAMPS[R.i] + "</span><span class='rpts'>up to " + PTS[kind] + " gems</span></div>";
+    if (kind === "vote") h += "<div class='think' aria-hidden='true'><i id='gThink'></i></div><p class='thinklbl' id='gThinkL'>Thinking time: 20 seconds. Then vote.</p>";
+    if (kind === "boss") {
+      R.hp = new Set();
+      h += "<div class='bossbar' id='gBoss'><div class='who'>" + bossSVG() + "<span>The " + BOSSES[R.d] + " blocks the path!</span></div><div class='hp'>" + ["C", "U", "B", "E", "S", "✓"].map((k) => "<i data-hp='" + k + "'>" + k + "</i>").join("") + "</div><small>Use each CUBES step to weaken it. A correct answer lands the final blow.</small></div>";
+    }
+    h += "<div class='card' id='gCard'><article class='tile t-" + q.type + "' id='gQ'>" + qHTML(q, R.u) + "</article></div>" +
+      "<div class='next' id='gNext'></div></section>";
+    scr.innerHTML = h;
+    const root = $("gQ");
+    if (q.interact) root.querySelectorAll("[data-part]").forEach((el) => { const p = q.interact[+el.dataset.part]; if (W[p.kind].init) W[p.kind].init(el, p); });
+    if (kind === "talk") $("gNext").innerHTML = "<button class='btn primary' data-gtalk>We've shared our thinking</button>";
+    if (kind === "vote") startThink();
+    nav(); tickClock();
+  }
+  function bossSVG() {
+    return "<svg viewBox='0 0 48 48' aria-hidden='true'><ellipse cx='24' cy='28' rx='19' ry='16' fill='var(--boss)'/><circle cx='17' cy='24' r='5' fill='#fff'/><circle cx='31' cy='24' r='5' fill='#fff'/><circle cx='18' cy='25' r='2.4' fill='#17233F'/><circle cx='30' cy='25' r='2.4' fill='#17233F'/><path d='M15 35 q9 6 18 0' stroke='#fff' stroke-width='3' fill='none' stroke-linecap='round'/><path d='M10 15 l4 7 M38 15 l-4 7' stroke='var(--boss)' stroke-width='4' stroke-linecap='round'/></svg>";
+  }
+  function qHTML(q, u) {
+    const counter = { n: 0 }, txt = (s, g) => (q.cubes ? DD.tokenText(s, g, counter) : fmt(s));
+    let h = "<div class='q'><p class='prompt'>" + txt(q.prompt, 0) + "</p>";
+    if (q.display) h += "<div class='display'>" + fmt(q.display) + "</div>";
+    if (q.list) h += "<ul class='list'>" + q.list.map((x, li) => "<li>" + txt(x, li + 1) + "</li>").join("") + "</ul>";
+    if (q.table) { let k = 50; h += "<div class='qt-w'><table class='qt'>" + q.table.map((row, ri) => "<tr>" + row.map((c) => (ri ? "<td>" : "<th>") + txt(String(c), k++) + (ri ? "</td>" : "</th>")).join("") + "</tr>").join("") + "</table></div>"; }
+    if (q.img) h += "<figure class='pic'><img src='" + u.img + q.img + "' alt=''></figure>";
+    if (q.type === "mc") {
+      const hasImg = q.options.some((o) => typeof o !== "string");
+      h += "<ol class='opts" + (hasImg ? " grid4" : "") + "'>" + q.options.map((o, k) => { if (o.img) o.imgSrc = u.img + o.img; return "<li><button class='opt' data-gi='" + k + "'><span class='let'>" + "ABCD"[k] + "</span>" + DD.optHTML(o) + "</button></li>"; }).join("") + "</ol>";
+    }
+    if (q.type === "tf") h += "<div class='opts tf'><button class='opt' data-gi='0'><span>True</span></button><button class='opt' data-gi='1'><span>False</span></button></div>";
+    h += "</div>";
+    if (q.cubes) h += DD.cubesHTML(q);
+    if (q.interact) {
+      h += "<div class='act'>" + q.interact.map((p, k) => "<div class='part' data-part='" + k + "'>" + W[p.kind].html(p, false) + "</div>").join("");
+      if (q.type === "sr" && q.interact.some((p) => W[p.kind].check)) h += "<div class='checkrow'><button class='btn primary' data-gcheck>Check</button><button class='btn' data-gskip>Show answer and move on</button><p class='feedback' data-fb aria-live='polite'></p></div>";
+      h += "</div>";
+    } else if (q.type === "sr") h += "<div class='act'><p class='open-note'>" + DD.ICON.talk + "Think, then share with a partner. Reveal the answer when you're ready.</p></div>";
+    if (q.type !== "sr") h += "<p class='feedback' data-fb aria-live='polite'></p>";
+    return h + "<div data-gans hidden>" + DD.answerHTML(q).replace("class='ans'", "class='ans show'") + "</div>";
+  }
+
+  // ---------- thinking time ----------
+  function startThink() {
+    const R = G.run; let t = 20;
+    clearInterval(R.think);
+    const bar = $("gThink"), lbl = $("gThinkL");
+    requestAnimationFrame(() => { if (bar) bar.style.width = "95%"; });
+    R.thinkLeft = 20;
+    R.think = setInterval(() => {
+      t--; R.thinkLeft = Math.max(0, t);
+      if (bar) bar.style.width = Math.max(0, (t / 20) * 100) + "%";
+      if (lbl) lbl.textContent = t > 0 ? "Thinking time: " + t + " seconds. Then vote." : "Time to vote! Show of hands, then tap the class's choice.";
+      if (t <= 0) clearInterval(R.think);
+    }, 1000);
+  }
+
+  // ---------- scoring ----------
+  function gain(n, msg) { const R = G.run; R.gems += n; $("gGems").textContent = R.gems; toast("+" + n + " gems · " + msg, false); }
+  function lose(msg) {
+    const R = G.run; R.wrong++;
+    if (R.hearts > 0) R.hearts--;
+    const hs = document.querySelectorAll(".hearts i"); hs.forEach((x, k) => x.classList.toggle("lost", k >= R.hearts));
+    const c = $("gCard"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake");
+    toast(msg, true);
+  }
+  function toast(msg, bad) { const n = $("gNext"); let t = n.querySelector(".toast"); if (!t) { t = document.createElement("span"); n.prepend(t); } t.className = "toast" + (bad ? " no" : ""); t.textContent = msg; }
+  function solved(points, why) {
+    const R = G.run; if (R.solved) return; R.solved = true; clearInterval(R.think);
+    const kind = roundKind(R.u.reviews[R.d][R.i]);
+    R.results.push({ ok: true, gems: points, kind });
+    gain(points, why);
+    $("gQ").querySelector("[data-gans]").hidden = false;
+    if (kind === "boss") hitBoss("✓");
+    DD.confetti($("gCard"));
+    nextBtn();
+  }
+  function skipped() {
+    const R = G.run; if (R.solved) return; R.solved = true; clearInterval(R.think);
+    R.results.push({ ok: false, gems: 0, kind: roundKind(R.u.reviews[R.d][R.i]) });
+    $("gQ").querySelector("[data-gans]").hidden = false;
+    const q = R.u.reviews[R.d][R.i];
+    if (q.interact) $("gQ").querySelectorAll("[data-part]").forEach((el) => { const p = q.interact[+el.dataset.part]; if (W[p.kind].reveal) W[p.kind].reveal(el, p); });
+    toast("Answer shown. On to the next camp.", true);
+    nextBtn();
+  }
+  function nextBtn() { const n = $("gNext"); n.querySelectorAll("button").forEach((b) => b.remove()); n.insertAdjacentHTML("beforeend", "<button class='btn primary' data-gnext>" + (G.run.i === 4 ? "Climb to the summit ↑" : "Next camp →") + "</button>"); n.querySelector("[data-gnext]").focus(); }
+  function hitBoss(k) {
+    const R = G.run, seg = document.querySelector("[data-hp='" + k + "']"); if (!seg || R.hp.has(k)) return;
+    R.hp.add(k); seg.classList.add("gone");
+    const b = $("gBoss"); b.classList.remove("hit"); void b.offsetWidth; b.classList.add("hit");
+    if (k !== "✓" && !R.solved) { R.gems += 10; $("gGems").textContent = R.gems; }
+  }
+  function check() {
+    const R = G.run, q = R.u.reviews[R.d][R.i], root = $("gQ"), fb = root.querySelector("[data-fb]");
+    const els = [...root.querySelectorAll("[data-part]")].filter((el) => W[q.interact[+el.dataset.part].kind].check);
+    const answers = els.filter((el) => DD.ANSWER_KINDS.has(q.interact[+el.dataset.part].kind));
+    let ok = true, msg = null;
+    for (const el of answers.length ? answers : els) {
+      const p = q.interact[+el.dataset.part], r = W[p.kind].check(el, p);
+      if (r.ok === null) { fb.className = "feedback no"; fb.textContent = r.msg; return; }
+      if (!r.ok) ok = false;
+      if (r.msg && (!r.ok || !msg)) msg = r.msg;
+    }
+    fb.className = "feedback " + (ok ? "ok" : "no");
+    fb.textContent = (ok ? "✓ Correct! " : "Not quite. ") + (msg || (ok ? "" : "Check the red ones and try again."));
+    const kind = roundKind(q), base = PTS[kind];
+    if (ok) solved(R.wrong ? Math.round(base / 2) : base, R.wrong ? "solved it" : "first try!");
+    else lose("Not quite — one heart lost. Try again.");
+  }
+  function vote(b) {
+    const R = G.run, q = R.u.reviews[R.d][R.i]; if (R.solved) return;
+    const ok = +b.dataset.gi === DD.correctIndex(q), fb = $("gQ").querySelector("[data-fb]");
+    b.classList.add(ok ? "right" : "wrong");
+    if (ok) {
+      fb.className = "feedback ok"; fb.innerHTML = "✓ Correct!" + (q.explain ? " " + fmt(q.explain) : "");
+      const bonus = R.wrong ? 0 : 5 * Math.round((R.thinkLeft || 0) / 2);
+      solved((R.wrong ? 50 : 100) + bonus, R.wrong ? "got there" : bonus ? "quick thinking!" : "nailed it");
+    } else { fb.className = "feedback no"; fb.textContent = "Not that one."; lose("Wrong answer — one heart lost. Vote again."); }
+  }
+
+  // ---------- powers ----------
+  function power(k) {
+    const R = G.run, q = R.u.reviews[R.d][R.i]; if (!R.powers[k]) return;
+    if (k === "pick") { R.powers.pick = false; R.player = 1 + Math.floor(Math.random() * G.classSize); const hud = $("hud"); hud.outerHTML = hudHTML(); tickClock(); return; }
+    if (k === "time") { R.powers.time = false; R.extra += 60; $("hud").outerHTML = hudHTML(); tickClock(); return; }
+    if (k === "hint") {
+      let hint = null;
+      if (q.type === "mc") { const wrong = [0, 1, 2, 3].filter((x) => x !== q.answer && !$("gQ").querySelector(".opt[data-gi='" + x + "']").classList.contains("wrong")); const x = wrong[Math.floor(Math.random() * wrong.length)]; if (x != null) { $("gQ").querySelector(".opt[data-gi='" + x + "']").classList.add("gone"); hint = "One wrong answer has been crossed out."; } }
+      else if (q.cubes) hint = "Try this strategy: " + q.cubes.solve[0].t + ".";
+      else if (q.explain) hint = q.explain.split(". ")[0] + ".";
+      else { const p = (q.interact || []).find((x) => x.hint); hint = p ? p.hint : "Start with the tool: try it together before you answer."; }
+      R.powers.hint = false; $("hud").outerHTML = hudHTML(); tickClock();
+      const card = $("gCard"); let hb = card.querySelector(".hintbox"); if (!hb) { hb = document.createElement("p"); hb.className = "hintbox"; card.prepend(hb); }
+      hb.innerHTML = "💡 " + fmt(hint);
+    }
+  }
+
+  // ---------- dash clock ----------
+  function clockLeft() { const R = G.run; return 300 + R.extra - (Date.now() - R.began) / 1000; }
+  function tickClock() {
+    const R = G.run; if (!R) return; const el = $("gClock"); if (!el) return;
+    const left = clockLeft(), s = Math.ceil(Math.abs(left));
+    el.textContent = (left < 0 ? "+" : "") + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+    $("gClockW").classList.toggle("over", left < 0);
+  }
+  setInterval(tickClock, 500);
+
+  // ---------- summit ----------
+  function summit() {
+    const R = G.run, inTime = clockLeft() >= 0, right = R.results.filter((r) => r.ok).length;
+    const stars = right === 0 ? 0 : R.hearts >= 2 && inTime && right === 5 ? 3 : R.hearts >= 1 && right >= 4 ? 2 : 1;
+    const st = store.get(); st.best = st.best || {}; const key = G.year + "-" + R.d; st.best[key] = Math.max(st.best[key] || 0, stars); st.year = G.year; st.classSize = G.classSize; store.set(st);
+    const used = Math.round((Date.now() - R.began) / 1000), mm = Math.floor(used / 60) + ":" + String(used % 60).padStart(2, "0");
+    scr.innerHTML = "<div class='trail'>" + trailSVG() + "</div><section class='card summit' id='gSummit'>" +
+      "<p class='eyebrow' style='color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:0'>" + DAYN[R.d % 4] + ", Week " + (1 + Math.floor(R.d / 4)) + "</p>" +
+      "<h1 class='gh1'>" + (stars === 3 ? "Summit! A perfect climb." : stars ? "You reached the summit!" : "You made it to the top together.") + "</h1>" +
+      "<div class='big' aria-label='" + stars + " of 3 stars'>" + starsHTML(stars) + "</div>" +
+      "<div class='tally'><div><b>" + R.gems + "</b><span>gems</span></div><div><b>" + right + " / 5</b><span>camps solved</span></div><div><b>" + R.hearts + "</b><span>hearts left</span></div><div><b>" + mm + "</b><span>" + (inTime ? "inside the dash clock" : "over the dash clock") + "</span></div></div>" +
+      "<div class='review'>" + R.results.map((r, k) => "<div><b>Camp " + (k + 1) + "</b><span>" + KIND[r.kind][0] + "</span><span class='r' style='color:" + (r.ok ? "var(--gem)" : "var(--muted)") + "'>" + (r.ok ? "+" + r.gems + " gems" : "answer shown") + "</span></div>").join("") + "</div>" +
+      "<p class='gsub'>3 stars: every camp solved, 2 or more hearts left and inside the dash clock.</p>" +
+      "<div class='next'><button class='btn primary' data-gagain>Climb again</button><button class='btn' data-gquit>Choose another day</button></div></section>";
+    setTimeout(() => { const s = $("gSummit"); if (s) { DD.confetti(s); setTimeout(() => DD.confetti(s), 600); } }, 200);
+  }
+
+  // ---------- events ----------
+  document.addEventListener("click", (e) => {
+    const t = e.target; let b;
+    if ((b = t.closest("[data-gy]"))) { G.year = +b.dataset.gy; const st = store.get(); st.year = G.year; store.set(st); pick(); return; }
+    if ((b = t.closest("[data-gd]"))) { const v = +$("gsize").value; if (v >= 2 && v <= 40) G.classSize = v; start(+b.dataset.gd); return; }
+    if (t.closest("[data-gquit]")) { pick(); return; }
+    if (t.closest("[data-gagain]")) { start(G.run.d); return; }
+    if (t.closest("[data-gnext]")) { G.run.i++; quest(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+    if ((b = t.closest("[data-pw]"))) { power(b.dataset.pw); return; }
+    if (!G.run) return;
+    const R = G.run, q = R.u.reviews[R.d][R.i], root = $("gQ"); if (!root) return;
+    if ((b = t.closest("#gQ .opt[data-gi]"))) { vote(b); return; }
+    if ((b = t.closest("#gQ [data-cube]"))) { DD.onCube(b); if (b.getAttribute("aria-pressed") === "true") hitBoss(b.dataset.cube.toUpperCase()); return; }
+    if ((b = t.closest("#gQ .tk")) && DD.marks.tool) { DD.onToken(b, $("gCard")); return; }
+    if (t.closest("#gQ [data-clearmarks]")) { DD.resetMarks(); root.querySelectorAll("[data-cube]").forEach((x) => x.getAttribute("aria-pressed") === "true" && "cub".includes(x.dataset.cube) && (DD.marks.tool = x.dataset.cube)); DD.drawMarks($("gCard")); return; }
+    if ((b = t.closest("#gQ [data-op]"))) { DD.onOp(b, q); return; }
+    if (t.closest("#gQ [data-gcheck]")) { if (!R.solved) check(); return; }
+    if (t.closest("#gQ [data-gskip]")) { skipped(); return; }
+    if (t.closest("[data-gtalk]")) { solved(PTS.talk, "great discussion"); return; }
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.matches("#gQ .inp") && G.run && !G.run.solved) { e.preventDefault(); check(); } });
+  window.addEventListener("resize", () => { if ($("gQ")) { $("gQ").querySelectorAll("[data-part]").forEach((el) => el._layout && el._layout()); DD.drawMarks($("gCard")); } });
+  pick();
+})();
+</script>
+</body>
+</html>

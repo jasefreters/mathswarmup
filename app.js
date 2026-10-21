@@ -63,10 +63,10 @@
     marks.tool = on && "cub".includes(k) ? k : null;
     ["c", "u", "b"].forEach((t) => tile.classList.toggle("tool-" + t, marks.tool === t));
   }
-  function onToken(tk) {
+  function onToken(tk, root) {
     const set = marks[marks.tool], i = +tk.dataset.w;
     set.has(i) ? set.delete(i) : set.add(i);
-    drawMarks();
+    drawMarks(root);
   }
   function drawMarks(root) {
     root = root || $("spotBody");
