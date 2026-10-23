@@ -42,6 +42,7 @@ These are the teacher's decisions so far. Apply them to all new content without 
 - **Tools never block an answer:** when a question has answer parts (`input`, `choose`, `select`, `order`, `expr`, `sentence`, `cells`, `scale`, `pair`, `fractions`, `sum6`), only those decide Check. The visual tools are for the teacher's modelling and are ignored if untouched. They decide only when the question has no answer parts.
 - **Done state:** a correct Check (or the correct multiple-choice or true/false option) marks the question done. The card plays confetti on return to the board and stays green with a Done badge. Questions with no check are done when the answer is shown.
 - **Timer** is visible on the board and inside every question.
+- **Teacher tools in every question:** Draw (pen and highlighter over the question, D key) and Flag (save a note on what to fix; the Flags list in the top bar copies them for Claude). Flags live in the browser (`dailydash-flags`).
 - **No faux bold:** the school font has one weight. School-font text is set to regular weight with `font-synthesis: none`, and answer emphasis is a soft highlight, not bold.
 - **School font:** question text uses `--f-school`, which is NSW Pre-cursive Solid when it's installed on the device, falling back to the free Google font Edu NSW ACT Foundation. Never commit the NSW font file to the public repo, because its licence isn't confirmed for web hosting.
 - **Answers:** work out and verify every answer yourself, and flag any assumption in `explain` (for example, an unlabelled length).

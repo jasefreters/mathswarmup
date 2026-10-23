@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Edu+NSW+ACT+Foundation:wght@400..700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
-<link rel="stylesheet" href="styles.css?v=202610230453">
+<link rel="stylesheet" href="styles.css?v=202610230826">
 </head>
 <body>
 <header class="bar">
@@ -25,6 +25,7 @@
       </div>
       <button class="btn" id="bAns" aria-pressed="false" title="Show all answers (A)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Answers</button>
       <button class="btn" id="bNotes" aria-pressed="false" title="Show syllabus focus areas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5"/></svg>Notes</button>
+      <button class="btn" id="bFlags" title="Questions you've flagged"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>Flags<b class="flag-n" id="flagN" hidden></b></button>
       <button class="btn" id="bFull" title="Full screen" aria-label="Full screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
   </div>
@@ -53,68 +54,92 @@
     <span class="eyebrow" id="sCount" style="margin:0"></span>
     <span class="spacer"></span>
     <span id="spotTimer"></span>
+    <button class="btn" id="sDraw" aria-pressed="false" title="Draw on the question (D)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l4-1L19 8l-3-3L5 16z"/></svg>Draw</button>
+    <button class="btn" id="sFlag" aria-pressed="false" title="Flag this question for a fix"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>Flag</button>
     <button class="btn" id="sAns" aria-pressed="false">Show answer</button>
     <button class="btn" id="sClose">Back to board</button>
   </div>
-  <div class="spot-main"><div class="wrap" id="spotBody"></div></div>
+  <div class="wrap ink-bar" id="inkBar" hidden role="toolbar" aria-label="Drawing tools">
+    <span class="ink-cols" role="group" aria-label="Pen colour">
+      <button class="ink-c" data-ink="#E5484D" aria-pressed="true" aria-label="Red pen" style="--k:#E5484D"></button><button class="ink-c" data-ink="#2449D8" aria-pressed="false" aria-label="Blue pen" style="--k:#2449D8"></button><button class="ink-c" data-ink="#1B8A55" aria-pressed="false" aria-label="Green pen" style="--k:#1B8A55"></button><button class="ink-c" data-ink="#17233F" aria-pressed="false" aria-label="Black pen" style="--k:#17233F"></button><button class="ink-c hl" data-ink="hl" aria-pressed="false" aria-label="Highlighter" style="--k:#FFD93D"></button>
+    </span>
+    <span class="ink-cols" role="group" aria-label="Pen size"><button class="ink-s" data-size="3" aria-pressed="false">Thin</button><button class="ink-s" data-size="6" aria-pressed="true">Medium</button><button class="ink-s" data-size="12" aria-pressed="false">Thick</button></span>
+    <button class="btn" data-inkundo>Undo</button><button class="btn" data-inkclear>Clear drawing</button>
+    <span class="ph">Drawing is on: the question's tools are paused. Press Draw again to use them.</span>
+  </div>
+  <div class="wrap flag-box" id="flagBox" hidden>
+    <label for="flagNote"><b>What should change in this question?</b></label>
+    <textarea class="inp" id="flagNote" rows="2" placeholder="e.g. The answer should accept 1.5 too"></textarea>
+    <div class="checkrow"><button class="btn primary" id="flagSave">Save flag</button><button class="btn" id="flagDel" hidden>Remove flag</button><button class="btn" id="flagCancel">Cancel</button><span class="ph" id="flagMsg"></span></div>
+  </div>
+  <div class="spot-main" id="spotMain"><div class="wrap" id="spotBody"></div><canvas class="ink" id="ink" aria-hidden="true"></canvas></div>
 </div>
 
-<script src="config.js?v=202610230453"></script>
-<script src="scope.js?v=202610230453"></script>
-<script src="units/s2a-unit1.js?v=202610230453"></script>
-<script src="units/s3a-unit1.js?v=202610230453"></script>
-<script src="units/s3a-unit16.js?v=202610230453"></script>
-<script src="units/s2b-unit36.js?v=202610230453"></script>
-<script src="units/s2b-unit21.js?v=202610230453"></script>
-<script src="units/s3b-unit21.js?v=202610230453"></script>
-<script src="units/s2a-unit2.js?v=202610230453"></script>
-<script src="units/s2b-unit22.js?v=202610230453"></script>
-<script src="units/s3a-unit2.js?v=202610230453"></script>
-<script src="units/s3b-unit22.js?v=202610230453"></script>
-<script src="units/s2a-unit3.js?v=202610230453"></script>
-<script src="units/s2b-unit23.js?v=202610230453"></script>
-<script src="units/s3a-unit3.js?v=202610230453"></script>
-<script src="units/s3b-unit23.js?v=202610230453"></script>
-<script src="units/s2b-unit24.js?v=202610230453"></script>
-<script src="units/s2a-unit5.js?v=202610230453"></script>
-<script src="units/s2a-unit4.js?v=202610230453"></script>
-<script src="units/s2b-unit25.js?v=202610230453"></script>
-<script src="units/s3a-unit5.js?v=202610230453"></script>
-<script src="units/s3b-unit24.js?v=202610230453"></script>
-<script src="units/s3a-unit4.js?v=202610230453"></script>
-<script src="units/s3b-unit25.js?v=202610230453"></script>
-<script src="units/s2a-unit6.js?v=202610230453"></script>
-<script src="units/s3a-unit6.js?v=202610230453"></script>
-<script src="units/s2b-unit26.js?v=202610230453"></script>
-<script src="units/s3b-unit26.js?v=202610230453"></script>
-<script src="units/s3a-unit7.js?v=202610230453"></script>
-<script src="units/s2a-unit7.js?v=202610230453"></script>
-<script src="units/s2b-unit27.js?v=202610230453"></script>
-<script src="units/s3b-unit27.js?v=202610230453"></script>
-<script src="units/s2a-unit8.js?v=202610230453"></script>
-<script src="units/s2b-unit28.js?v=202610230453"></script>
-<script src="units/s3a-unit8.js?v=202610230453"></script>
-<script src="units/s3b-unit28.js?v=202610230453"></script>
-<script src="units/s3a-unit9.js?v=202610230453"></script>
-<script src="units/s2b-unit29.js?v=202610230453"></script>
-<script src="units/s2a-unit9.js?v=202610230453"></script>
-<script src="units/s3b-unit29.js?v=202610230453"></script>
-<script src="units/s3a-unit10.js?v=202610230453"></script>
-<script src="units/s2a-unit10.js?v=202610230453"></script>
-<script src="units/s3b-unit30.js?v=202610230453"></script>
-<script src="units/s2b-unit30.js?v=202610230453"></script>
-<script src="units/s3a-unit11.js?v=202610230453"></script>
-<script src="units/s3b-unit31.js?v=202610230453"></script>
-<script src="units/s2b-unit31.js?v=202610230453"></script>
-<script src="units/s2a-unit11.js?v=202610230453"></script>
-<script src="units/s3a-unit12.js?v=202610230453"></script>
-<script src="units/s3b-unit32.js?v=202610230453"></script>
-<script src="units/s2a-unit12.js?v=202610230453"></script>
-<script src="units/s2b-unit32.js?v=202610230453"></script>
-<script src="units/s2b-unit33.js?v=202610230453"></script>
-<script src="units/s2a-unit13.js?v=202610230453"></script>
-<script src="units/s3a-unit13.js?v=202610230453"></script>
-<script src="units/s3b-unit33.js?v=202610230453"></script>
-<script src="app.js?v=202610230453"></script>
+<div class="flags" id="flags" hidden role="dialog" aria-modal="true" aria-labelledby="flagsH">
+  <div class="flags-card">
+    <div class="flags-top"><h2 id="flagsH">Flagged questions</h2><button class="btn" id="flagsClose">Close</button></div>
+    <p class="ph">Flags are saved on this device. Copy the list and paste it to Claude to get the fixes made.</p>
+    <ol class="flags-list" id="flagsList"></ol>
+    <div class="checkrow"><button class="btn primary" id="flagsCopy">Copy list</button><button class="btn" id="flagsClear">Clear all flags</button><span class="ph" id="flagsMsg"></span></div>
+  </div>
+</div>
+
+<script src="config.js?v=202610230826"></script>
+<script src="scope.js?v=202610230826"></script>
+<script src="units/s2a-unit1.js?v=202610230826"></script>
+<script src="units/s3a-unit1.js?v=202610230826"></script>
+<script src="units/s3a-unit16.js?v=202610230826"></script>
+<script src="units/s2b-unit36.js?v=202610230826"></script>
+<script src="units/s2b-unit21.js?v=202610230826"></script>
+<script src="units/s3b-unit21.js?v=202610230826"></script>
+<script src="units/s2a-unit2.js?v=202610230826"></script>
+<script src="units/s2b-unit22.js?v=202610230826"></script>
+<script src="units/s3a-unit2.js?v=202610230826"></script>
+<script src="units/s3b-unit22.js?v=202610230826"></script>
+<script src="units/s2a-unit3.js?v=202610230826"></script>
+<script src="units/s2b-unit23.js?v=202610230826"></script>
+<script src="units/s3a-unit3.js?v=202610230826"></script>
+<script src="units/s3b-unit23.js?v=202610230826"></script>
+<script src="units/s2b-unit24.js?v=202610230826"></script>
+<script src="units/s2a-unit5.js?v=202610230826"></script>
+<script src="units/s2a-unit4.js?v=202610230826"></script>
+<script src="units/s2b-unit25.js?v=202610230826"></script>
+<script src="units/s3a-unit5.js?v=202610230826"></script>
+<script src="units/s3b-unit24.js?v=202610230826"></script>
+<script src="units/s3a-unit4.js?v=202610230826"></script>
+<script src="units/s3b-unit25.js?v=202610230826"></script>
+<script src="units/s2a-unit6.js?v=202610230826"></script>
+<script src="units/s3a-unit6.js?v=202610230826"></script>
+<script src="units/s2b-unit26.js?v=202610230826"></script>
+<script src="units/s3b-unit26.js?v=202610230826"></script>
+<script src="units/s3a-unit7.js?v=202610230826"></script>
+<script src="units/s2a-unit7.js?v=202610230826"></script>
+<script src="units/s2b-unit27.js?v=202610230826"></script>
+<script src="units/s3b-unit27.js?v=202610230826"></script>
+<script src="units/s2a-unit8.js?v=202610230826"></script>
+<script src="units/s2b-unit28.js?v=202610230826"></script>
+<script src="units/s3a-unit8.js?v=202610230826"></script>
+<script src="units/s3b-unit28.js?v=202610230826"></script>
+<script src="units/s3a-unit9.js?v=202610230826"></script>
+<script src="units/s2b-unit29.js?v=202610230826"></script>
+<script src="units/s2a-unit9.js?v=202610230826"></script>
+<script src="units/s3b-unit29.js?v=202610230826"></script>
+<script src="units/s3a-unit10.js?v=202610230826"></script>
+<script src="units/s2a-unit10.js?v=202610230826"></script>
+<script src="units/s3b-unit30.js?v=202610230826"></script>
+<script src="units/s2b-unit30.js?v=202610230826"></script>
+<script src="units/s3a-unit11.js?v=202610230826"></script>
+<script src="units/s3b-unit31.js?v=202610230826"></script>
+<script src="units/s2b-unit31.js?v=202610230826"></script>
+<script src="units/s2a-unit11.js?v=202610230826"></script>
+<script src="units/s3a-unit12.js?v=202610230826"></script>
+<script src="units/s3b-unit32.js?v=202610230826"></script>
+<script src="units/s2a-unit12.js?v=202610230826"></script>
+<script src="units/s2b-unit32.js?v=202610230826"></script>
+<script src="units/s2b-unit33.js?v=202610230826"></script>
+<script src="units/s2a-unit13.js?v=202610230826"></script>
+<script src="units/s3a-unit13.js?v=202610230826"></script>
+<script src="units/s3b-unit33.js?v=202610230826"></script>
+<script src="app.js?v=202610230826"></script>
 </body>
 </html>

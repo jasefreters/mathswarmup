@@ -1619,7 +1619,7 @@
     tile.classList.add("pop");
     setTimeout(() => { layer.remove(); tile.classList.remove("pop"); }, 1900);
   }
-  function render() { renderNav(); renderBoard(); save(); }
+  function render() { renderNav(); renderBoard(); decorateFlags(); save(); }
 
   function buildMix() {
     const y = yearCfg(), pool = { choice: [], sr: [] };
@@ -1641,7 +1641,8 @@
   function closeSpot() {
     timerHome();
     const i = state.spot; state.spot = -1; $("spot").hidden = true; document.body.style.overflow = ""; $("spotBody").innerHTML = "";
-    renderNav(); renderBoard();
+    setDraw(false); $("flagBox").hidden = true;
+    renderNav(); renderBoard(); decorateFlags();
     const t = $("board").querySelector("[data-i='" + i + "']"); if (t) t.focus({ preventScroll: true });
   }
   function renderSpot() {
@@ -1653,6 +1654,8 @@
     $("sNext").disabled = state.spot === list.length - 1;
     setSpotAns(false);
     if (q.interact) $("spotBody").querySelectorAll("[data-part]").forEach((el) => { const p = q.interact[+el.dataset.part]; if (W[p.kind].init) W[p.kind].init(el, p); });
+    flagButton(); $("flagBox").hidden = true;
+    requestAnimationFrame(inkRedraw);
   }
   function setSpotAns(on) {
     const a = $("spotBody").querySelector(".ans"); if (a) a.classList.toggle("show", on);
@@ -1765,6 +1768,103 @@
     document.querySelectorAll(".timer .mins").forEach((x) => x.setAttribute("aria-pressed", x === b));
     tDraw();
   }));
+
+  // ---------- flags: note a question that needs a fix ----------
+  const flagStore = {
+    get() { try { return JSON.parse(localStorage.getItem("dailydash-flags") || "{}"); } catch (e) { return {}; } },
+    set(v) { try { localStorage.setItem("dailydash-flags", JSON.stringify(v)); } catch (e) {} }
+  };
+  const FLAG_SVG = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.4'><path d='M5 21V4M5 4h11l-2 4 2 4H5'/></svg>";
+  function flagLabel(key) {
+    const m = /^S(\d)([AB])-(\d+)-(\d+)-(\d+)$/.exec(key); if (!m) return key;
+    const u = UNITS.find((x) => x.stage === +m[1] && x.ab === m[2] && x.unit === +m[3]), d = +m[4], i = +m[5];
+    const y = YEARS.find((x) => x.stage === +m[1] && x.ab === m[2]);
+    if (!u) return key;
+    const prompt = (u.reviews[d][i].prompt || "").replace(/\*\*/g, "");
+    return "Year " + (y ? y.year : "?") + " · Term " + u.term + " Weeks " + (u.ls * 2 - 1) + "–" + u.ls * 2 + " · Week " + weekOf(u.ls, d) + " " + DAYNAMES[d % 4] + " · Q" + (i + 1) + ": " + (prompt.length > 70 ? prompt.slice(0, 70) + "…" : prompt);
+  }
+  function flagCount() { const n = Object.keys(flagStore.get()).length; $("flagN").textContent = n; $("flagN").hidden = !n; }
+  function decorateFlags() {
+    const f = flagStore.get();
+    $("board").querySelectorAll(".tile").forEach((t) => { const it = items()[+t.dataset.i]; if (it && f[it.key] && !t.querySelector(".flag-pin")) t.insertAdjacentHTML("beforeend", "<span class='flag-pin' title='Flagged: " + esc(f[it.key].note) + "'>" + FLAG_SVG + "Flagged</span>"); });
+    flagCount();
+  }
+  function flagButton() { const it = items()[state.spot], on = !!(it && flagStore.get()[it.key]); $("sFlag").setAttribute("aria-pressed", on); $("sFlag").lastChild.textContent = on ? "Flagged" : "Flag"; }
+  $("sFlag").onclick = () => {
+    const box = $("flagBox"), it = items()[state.spot], f = flagStore.get()[it.key];
+    box.hidden = !box.hidden; if (box.hidden) return;
+    $("flagNote").value = f ? f.note : ""; $("flagDel").hidden = !f; $("flagMsg").textContent = ""; $("flagNote").focus();
+  };
+  $("flagCancel").onclick = () => { $("flagBox").hidden = true; };
+  $("flagSave").onclick = () => {
+    const it = items()[state.spot], note = $("flagNote").value.trim();
+    if (!note) { $("flagMsg").textContent = "Write what should change first."; return; }
+    const f = flagStore.get(); f[it.key] = { note, at: new Date().toISOString().slice(0, 10) }; flagStore.set(f);
+    $("flagBox").hidden = true; flagButton(); flagCount();
+  };
+  $("flagDel").onclick = () => { const it = items()[state.spot], f = flagStore.get(); delete f[it.key]; flagStore.set(f); $("flagBox").hidden = true; flagButton(); flagCount(); };
+  function flagsList() {
+    const f = flagStore.get(), keys = Object.keys(f);
+    $("flagsList").innerHTML = keys.length ? keys.map((k) => "<li><b>" + esc(flagLabel(k)) + "</b><small>" + esc(f[k].note) + " · flagged " + esc(f[k].at) + "</small><button class='go' data-flaggo='" + esc(k) + "'>Open this question</button></li>").join("") : "<li class='ph'>No flags yet. Open a question and press Flag.</li>";
+    $("flagsMsg").textContent = "";
+  }
+  $("bFlags").onclick = () => { flagsList(); $("flags").hidden = false; $("flagsClose").focus(); };
+  $("flagsClose").onclick = () => { $("flags").hidden = true; };
+  $("flags").addEventListener("click", (e) => {
+    if (e.target === $("flags")) { $("flags").hidden = true; return; }
+    const b = e.target.closest("[data-flaggo]"); if (!b) return;
+    const m = /^S(\d)([AB])-(\d+)-(\d+)-(\d+)$/.exec(b.dataset.flaggo), u = UNITS.find((x) => x.stage === +m[1] && x.ab === m[2] && x.unit === +m[3]), y = YEARS.find((x) => x.stage === +m[1] && x.ab === m[2]);
+    if (!u || !y) return;
+    $("flags").hidden = true; state.year = y.year; state.term = u.term; state.ls = u.ls; state.day = +m[4]; state.mixed = null; render(); openSpot(+m[5]);
+  });
+  $("flagsCopy").onclick = () => {
+    const f = flagStore.get(), text = Object.keys(f).map((k) => "- " + flagLabel(k) + " → " + f[k].note).join("\n") || "No flags.";
+    const done = () => ($("flagsMsg").textContent = "Copied. Paste it into your chat with Claude.");
+    try { navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text)); } catch (e) { fallbackCopy(text); }
+  };
+  function fallbackCopy(text) { const t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select(); try { document.execCommand("copy"); $("flagsMsg").textContent = "Copied."; } catch (e) { $("flagsMsg").textContent = "Select the list and copy it."; } t.remove(); }
+  $("flagsClear").onclick = () => { if ($("flagsClear").dataset.sure !== "1") { $("flagsClear").dataset.sure = "1"; $("flagsClear").textContent = "Press again to clear every flag"; return; } flagStore.set({}); $("flagsClear").dataset.sure = ""; $("flagsClear").textContent = "Clear all flags"; flagsList(); flagCount(); render(); };
+
+  // ---------- pen: draw over the question to model thinking ----------
+  const ink = { on: false, col: "#E5484D", size: 6, strokes: new Map(), cur: null };
+  const canvas = $("ink"), cx = canvas.getContext("2d");
+  function inkKey() { const it = items()[state.spot]; return it ? it.key : ""; }
+  function inkSize() {
+    const m = $("spotMain"), r = window.devicePixelRatio || 1, w = m.clientWidth, h = Math.max($("spotBody").offsetHeight, m.clientHeight);
+    if (canvas.width !== Math.round(w * r) || canvas.height !== Math.round(h * r)) { canvas.width = Math.round(w * r); canvas.height = Math.round(h * r); canvas.style.width = w + "px"; canvas.style.height = h + "px"; }
+    cx.setTransform(r, 0, 0, r, 0, 0);
+  }
+  function inkStroke(s) {
+    if (!s.pts.length) return;
+    cx.save(); cx.lineCap = cx.lineJoin = "round";
+    if (s.hl) { cx.globalAlpha = .38; cx.strokeStyle = "#FFD93D"; cx.lineWidth = s.w * 3; } else { cx.strokeStyle = s.c; cx.lineWidth = s.w; }
+    cx.beginPath(); cx.moveTo(s.pts[0][0], s.pts[0][1]); s.pts.forEach((p) => cx.lineTo(p[0], p[1])); if (s.pts.length === 1) cx.lineTo(s.pts[0][0] + .1, s.pts[0][1]);
+    cx.stroke(); cx.restore();
+  }
+  function inkRedraw() { inkSize(); cx.clearRect(0, 0, canvas.width, canvas.height); (ink.strokes.get(inkKey()) || []).forEach(inkStroke); }
+  function setDraw(on) {
+    ink.on = on; $("spot").classList.toggle("drawing", on); $("inkBar").hidden = !on;
+    $("sDraw").setAttribute("aria-pressed", on); if (on) inkRedraw();
+  }
+  $("sDraw").onclick = () => setDraw(!ink.on);
+  canvas.addEventListener("pointerdown", (e) => {
+    if (!ink.on) return; e.preventDefault(); canvas.setPointerCapture(e.pointerId);
+    const k = inkKey(); if (!ink.strokes.has(k)) ink.strokes.set(k, []);
+    ink.cur = { c: ink.col, w: ink.size, hl: ink.col === "hl", pts: [[e.offsetX, e.offsetY]] }; ink.strokes.get(k).push(ink.cur);
+  });
+  canvas.addEventListener("pointermove", (e) => { if (!ink.cur) return; ink.cur.pts.push([e.offsetX, e.offsetY]); inkRedraw(); });
+  const inkEnd = () => { ink.cur = null; };
+  canvas.addEventListener("pointerup", inkEnd); canvas.addEventListener("pointercancel", inkEnd);
+  $("inkBar").addEventListener("click", (e) => {
+    const c = e.target.closest("[data-ink]"), z = e.target.closest("[data-size]");
+    if (c) { ink.col = c.dataset.ink; $("inkBar").querySelectorAll("[data-ink]").forEach((b) => b.setAttribute("aria-pressed", b === c)); }
+    if (z) { ink.size = +z.dataset.size; $("inkBar").querySelectorAll("[data-size]").forEach((b) => b.setAttribute("aria-pressed", b === z)); }
+    if (e.target.closest("[data-inkundo]")) { const a = ink.strokes.get(inkKey()); if (a) a.pop(); inkRedraw(); }
+    if (e.target.closest("[data-inkclear]")) { ink.strokes.delete(inkKey()); inkRedraw(); }
+  });
+  window.addEventListener("resize", () => { if (state.spot >= 0) inkRedraw(); });
+  document.addEventListener("keydown", (e) => { if (state.spot >= 0 && e.key.toLowerCase() === "d" && !e.target.matches("input, textarea") && !e.metaKey && !e.ctrlKey && !e.altKey) setDraw(!ink.on); });
+  new ResizeObserver(() => { if (state.spot >= 0) inkRedraw(); }).observe($("spotBody"));
 
   tDraw();
   render();
