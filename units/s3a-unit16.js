@@ -1,6 +1,6 @@
 /*
   Stage 3 Year A, Unit 16 — Review of learning (Term 4, learning sequence 1: Weeks 1–2).
-  Format guide: see README.md ("Adding a unit").
+  Format guide: see README.md and CLAUDE.md.
 */
 UNITS.push({
   stage: 3, ab: "A", term: 4, ls: 1, unit: 16,
@@ -11,21 +11,21 @@ UNITS.push({
     [
       {
         type: "mc", focus: "Multiplicative relations A",
-        prompt: "Which of the following includes the **factors** of 30?",
+        prompt: "Which of the following includes the factors of 30?",
         options: ["1, 2, 3, 4, 6, 8, 15, 30", "2, 4, 6, 10, 15, 30", "1, 2, 3, 5, 6, 10, 15, 30", "3, 6, 8, 9, 15, 30"],
         answer: 2,
         explain: "Every factor pair of 30: 1 × 30, 2 × 15, 3 × 10, 5 × 6."
       },
       {
         type: "sr", focus: "Representing quantity fractions A",
-        prompt: "**Order** the fractions on a number line from 0 to 1.",
+        prompt: "Order the fractions on a number line from 0 to 1.",
         interact: [{ kind: "numberline", min: 0, max: 1, ticks: 8,
           items: [["[1/2]", 1/2], ["[3/8]", 3/8], ["[1/4]", 1/4], ["[3/4]", 3/4], ["[7/8]", 7/8], ["[4/4]", 1], ["[5/8]", 5/8]] }],
         answer: "[1/4], [3/8], [1/2], [5/8], [3/4], [7/8], [4/4]"
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "Record two 6-digit numbers that, when added together, make a number **close to 1 million**.",
+        prompt: "Record two 6-digit numbers that, when added together, make a number close to 1 million.",
         interact: [{ kind: "sum6", target: 1000000, within: 20000 }],
         answer: "Many answers. For example 499 999 + 500 001 = 1 000 000, or 650 000 + 349 500 = 999 500."
       },
@@ -33,14 +33,20 @@ UNITS.push({
         type: "sr", focus: "Geometric measure A: Length",
         prompt: "Jesse swam 400 m on Monday, 500 m on Tuesday, 300 m on Wednesday, 600 m on Thursday and 200 m on Friday.\nRecord the distance Jesse swam using the abbreviation for kilometres.",
         cubes: {"ops": ["+"], "also": ["÷"], "solve": [{"t": "Make friendly pairs", "s": "400 + 600 = 1000 and 500 + 300 + 200 = 1000. 1000 + 1000 = 2000 m."}, {"t": "Add the hundreds", "s": "4 + 5 + 3 + 6 + 2 = 20 hundreds = 2000 m. Then 1000 m = 1 km, so 2000 m = 2 km."}]},
-        interact: [{ kind: "input", fields: [{ label: "Total", value: 2, suffix: "km" }] }],
+        interact: [
+          { kind: "group", items: ["400 m", "500 m", "300 m", "600 m", "200 m"], hint: "Group the distances that make 1000 m." },
+          { kind: "input", fields: [{ label: "Total", value: 2, suffix: "km" }] }
+        ],
         answer: "400 + 500 + 300 + 600 + 200 = 2000 m = **2 km**"
       },
       {
         type: "sr", focus: "Non-spatial measure A: Time",
         prompt: "Sophie needs to catch the bus to the oval at 3:30 pm and then the 5:45 pm bus home.\nRecord the times in 24-hour time.",
         cubes: {"ops": ["+"], "solve": [{"t": "Add 12 to the pm hours", "s": "3:30 pm → 3 + 12 = 15, so 1530. 5:45 pm → 5 + 12 = 17, so 1745."}, {"t": "Count on from midday", "s": "Midday is 1200. 3 hours 30 minutes later is 1530. 5 hours 45 minutes later is 1745."}]},
-        interact: [{ kind: "input", fields: [{ label: "3:30 pm", accept: ["1530"] }, { label: "5:45 pm", accept: ["1745"] }] }],
+        interact: [
+          { kind: "clock", time: "3:30", h24: true, drag: true },
+          { kind: "input", fields: [{ label: "3:30 pm", accept: ["1530", "15:30"] }, { label: "5:45 pm", accept: ["1745", "17:45"] }] }
+        ],
         answer: "**1530** and **1745**"
       }
     ],
@@ -48,28 +54,31 @@ UNITS.push({
     [
       {
         type: "tf", focus: "Multiplicative relations A",
-        prompt: "Jeremy says 14 is a **prime number** because it has **factors** of 1, 2, 7 and 14.",
+        prompt: "Jeremy says 14 is a prime number because it has factors of 1, 2, 7 and 14.",
         answer: false,
         explain: "14 has more than two factors, so it is a composite number. A prime number has exactly two factors: 1 and itself."
       },
       {
         type: "sr", focus: "Representing quantity fractions A",
-        prompt: "Each picture shows a fraction. **Order** them on a number line from 0 to 1.",
-        img: "unit-fractions-models.png",
+        prompt: "Each picture shows a fraction. Order them on a number line from 0 to 1.",
+        img: "u16-fraction-models.png",
         interact: [{ kind: "numberline", min: 0, max: 1, ticks: 0,
           items: [["strip", 1/4], ["1 third", 1/3], ["[1/10]", 1/10], ["circle", 1/6]] }],
         answer: "[1/10], [1/6] (circle), [1/4] (strip of 4), [1/3] (one third)"
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "Use a **mental strategy** to solve:",
+        prompt: "Use a mental strategy to solve:",
         display: "3597 + 5349",
-        interact: [{ kind: "input", fields: [{ value: 8946 }] }],
+        interact: [
+          { kind: "jumps", start: 5349, steps: [1000, 100, 10, 1], back: true, hint: "Start at 5349. Jump on a friendly 3600, then jump back the extra 3." },
+          { kind: "input", fields: [{ label: "3597 + 5349 =", value: 8946 }] }
+        ],
         answer: "**8946** (e.g. 3600 + 5349 = 8949, then take away 3)"
       },
       {
         type: "sr", focus: "Geometric measure A: Length",
-        prompt: "Elias trained for the long jump. His jumps measured 1.54 m, 1.43 m and 1.32 m.\nEstimate the total distance.",
+        prompt: "Elias trained for the long jump. His jumps measured 1.54 m, 1.43 m and 1.32 m.\nEstimate the total distance using an appropriate unit of measure.",
         cubes: {"ops": ["+"], "solve": [{"t": "Round to one decimal place", "s": "1.5 + 1.4 + 1.3 = 4.2 m. The real total is a little more, so about 4.3 m."}, {"t": "Round to the nearest half metre", "s": "1.5 + 1.5 + 1.5 = 4.5 m. Two jumps were rounded up, so the total is a bit under 4.5 m."}]},
         interact: [{ kind: "input", fields: [{ label: "About", min: 4.1, max: 4.5, suffix: "m" }] }],
         answer: "About **4.3 m** (1.5 + 1.4 + 1.3 ≈ 4.2 m; the exact total is 4.29 m)"
@@ -103,27 +112,27 @@ UNITS.push({
     [
       {
         type: "mc", focus: "Multiplicative relations A",
-        prompt: "I am thinking of a number. Its **factors** include **1, 2, 3, 4, 6 and 8**. What number am I?",
+        prompt: "I am thinking of a number. Its factors include 1, 2, 3, 4, 6 and 8. What number am I?",
         options: ["57", "68", "96", "104"],
         answer: 2,
         explain: "96 ÷ 8 = 12 and 96 ÷ 6 = 16. 57 is odd, and 68 and 104 are not divisible by 3."
       },
       {
         type: "sr", focus: "Representing quantity fractions A",
-        prompt: "**Order** the unit fractions on a number line from 0 to 1.",
+        prompt: "Order the unit fractions on a number line from 0 to 1.",
         interact: [{ kind: "numberline", min: 0, max: 1, ticks: 0,
           items: [["[1/8]", 1/8], ["[1/6]", 1/6], ["[1/3]", 1/3], ["[1/10]", 1/10], ["[1/2]", 1/2], ["[1/4]", 1/4], ["[1/5]", 1/5]] }],
         answer: "[1/10], [1/8], [1/6], [1/5], [1/4], [1/3], [1/2]"
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "Use the strategies of **levelling** and **constant difference** to solve:",
+        prompt: "Use the strategies of levelling and constant difference to solve:",
         interact: [{ kind: "input", fields: [{ label: "456 + 64 =", value: 520 }, { label: "289 − 31 =", value: 258 }] }],
         answer: "456 + 64 → 460 + 60 = **520** · 289 − 31 → 288 − 30 = **258**"
       },
       {
         type: "sr", focus: "Geometric measure A: Length",
-        prompt: "Find the total **perimeter** of this composite shape.",
+        prompt: "Find the total perimeter of this composite shape.",
         interact: [
           { kind: "sides", label: "Yellow H-shaped composite shape", view: [420, 400],
             poly: [[60,64], [156,64], [156,172], [216,172], [216,64], [312,64], [312,364], [216,364], [216,256], [156,256], [156,364], [60,364]],
@@ -136,7 +145,7 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Three-dimensional spatial structure A: 3D objects",
-        prompt: "Tyrell says a **square pyramid** has 4 vertices. Do you agree or disagree? Why?",
+        prompt: "Tyrell says a square pyramid has 4 vertices. Do you agree or disagree? Why?",
         interact: [
           { kind: "choose", rows: [{ t: "Tyrell is", options: ["Correct", "Incorrect"], a: 1 }] },
           { kind: "input", fields: [{ label: "A square pyramid has", value: 5, suffix: "vertices" }] }
@@ -148,7 +157,7 @@ UNITS.push({
     [
       {
         type: "tf", focus: "Multiplicative relations A",
-        prompt: "9 is a **factor** of 48.",
+        prompt: "9 is a factor of 48.",
         follow: "Communicate your reasoning.",
         answer: false,
         explain: "48 ÷ 9 = 5 remainder 3. The factors of 48 are 1, 2, 3, 4, 6, 8, 12, 16, 24 and 48."
@@ -156,14 +165,17 @@ UNITS.push({
       {
         type: "sr", focus: "Represents numbers B",
         prompt: "Record 10%, or one-tenth, of each number.",
-        interact: [{ kind: "input", fields: [
+        interact: [
+          { kind: "pv", cols: ["H", "T", "O", "t"], start: 22, shift: true, hint: "Press ÷ 10 to move every digit one place to the right. 22 becomes 2.2." },
+          { kind: "input", fields: [
           { label: "130", value: 13 }, { label: "250", value: 25 }, { label: "70", value: 7 },
-          { label: "620", value: 62 }, { label: "22", value: 2.2 }] }],
+          { label: "620", value: 62 }, { label: "22", value: 2.2 }] }
+        ],
         answer: "13 · 25 · 7 · 62 · 2.2"
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "Which combination of parcels will **balance** a set of scales?",
+        prompt: "Which combination of parcels will balance a set of scales?",
         interact: [{ kind: "balance", unit: "kg",
           items: [["Parcel A", 47.91], ["Parcel B", 4.003], ["Parcel C", 32.713], ["Parcel D", 11.194]] }],
         answer: "Parcel A on one side, B + C + D on the other: 4.003 + 32.713 + 11.194 = **47.91 kg**"
@@ -171,6 +183,7 @@ UNITS.push({
       {
         type: "sr", focus: "Geometric measure A: Length",
         prompt: "Pop's garden needs 60 m of fencing. What could be the length and width of the garden?",
+        follow: "Communicate your thinking.",
         cubes: {"ops": ["÷"], "also": ["+", "−"], "solve": [{"t": "Halve the fencing", "s": "One length and one width use half the fence: 60 ÷ 2 = 30 m. Choose two numbers that add to 30, like 20 m and 10 m."}, {"t": "Guess and check", "s": "Try 15 m by 15 m: 15 + 15 + 15 + 15 = 60 m. It works!"}]},
         interact: [
           { kind: "sides", label: "Rectangular garden with unknown length and width", view: [420, 240],
@@ -205,14 +218,19 @@ UNITS.push({
         type: "sr", focus: "Represents numbers B",
         prompt: "Sarah wants new athletic shoes that cost $200. There is a 25% discount. How much will Sarah pay?",
         cubes: {"ops": ["÷", "−"], "also": ["×"], "solve": [{"t": "Find a quarter", "s": "25% = [1/4]. $200 ÷ 4 = $50 off. $200 − $50 = $150."}, {"t": "Find what she pays", "s": "She pays 75%, which is [3/4]. [1/4] of $200 is $50, so [3/4] is 3 × $50 = $150."}]},
-        interact: [{ kind: "input", fields: [{ prefix: "$", value: 150 }] }],
+        interact: [
+          { kind: "shade", parts: 4, pct: true, each: 50, money: true, hint: "The strip is the $200 price in quarters. Shade the discount." },
+          { kind: "input", fields: [{ label: "Sarah pays", prefix: "$", value: 150 }] }
+        ],
         answer: "25% of $200 = $50, so Sarah pays **$150**"
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "Use **estimation** to decide if this answer is reasonable.",
-        img: "subtraction-check.png",
+        prompt: "Use estimation to decide if this answer is reasonable.",
+        img: "u16-subtraction.png",
+        follow: "Communicate your thinking.",
         interact: [
+          { kind: "jumps", start: 434006, steps: [1000, 100, 10, 1], back: true, min: 428000, hint: "Estimate: jump back about 5000 from 434 006. Where do you land?" },
           { kind: "choose", rows: [{ t: "Is 434 207 reasonable?", options: ["Yes", "No"], a: 1 }] },
           { kind: "input", fields: [{ label: "Correct answer", value: 428807 }] }
         ],
@@ -220,7 +238,7 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Non-spatial measure A: Mass",
-        prompt: "Choose the best unit to measure the **mass** of each item.",
+        prompt: "Choose the best unit to measure the mass of each item.",
         interact: [{ kind: "choose", rows: [
           { t: "a pencil", options: ["g", "kg", "t"], a: 0 },
           { t: "a watermelon", options: ["g", "kg", "t"], a: 1 },
@@ -230,10 +248,22 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Chance A",
-        prompt: "Which outcomes are **equally likely**?",
-        img: "spinner.png",
-        interact: [{ kind: "select", hint: "Tap the colours that are equally likely.",
-          items: [["Orange", true], ["Blue", true], ["Green", false]] }],
+        prompt: "Identify the possible outcomes that are equally likely.",
+        follow: "Communicate your thinking.",
+        interact: [
+          { kind: "classify", label: "Spinner with four equal sections: orange, green, blue and green", view: [240, 240], total: 4, mark: "outline",
+            hint: "Choose a colour, then tap each section of that colour. The tally shows the fraction of the spinner.",
+            cats: [{ k: "o", t: "orange", c: "#8A3CC4" }, { k: "b", t: "blue", c: "#111111" }, { k: "g", t: "green", c: "#D6408B" }],
+            shapes: [
+              { p: "120,120 120,20 130.5,20.5 140.8,22.2 150.9,24.9 160.7,28.6 170,33.4 178.8,39.1 186.9,45.7 194.3,53.1 200.9,61.2 206.6,70 211.4,79.3 215.1,89.1 217.8,99.2 219.5,109.5 220,120", fill: "#E87A2E", a: "o" },
+              { p: "120,120 220,120 219.5,130.5 217.8,140.8 215.1,150.9 211.4,160.7 206.6,170 200.9,178.8 194.3,186.9 186.9,194.3 178.8,200.9 170,206.6 160.7,211.4 150.9,215.1 140.8,217.8 130.5,219.5 120,220", fill: "#72B852", a: "g" },
+              { p: "120,120 120,220 109.5,219.5 99.2,217.8 89.1,215.1 79.3,211.4 70,206.6 61.2,200.9 53.1,194.3 45.7,186.9 39.1,178.8 33.4,170 28.6,160.7 24.9,150.9 22.2,140.8 20.5,130.5 20,120", fill: "#1F70B8", a: "b" },
+              { p: "120,120 20,120 20.5,109.5 22.2,99.2 24.9,89.1 28.6,79.3 33.4,70 39.1,61.2 45.7,53.1 53.1,45.7 61.2,39.1 70,33.4 79.3,28.6 89.1,24.9 99.2,22.2 109.5,20.5 120,20", fill: "#72B852", a: "g",
+                deco: "<circle cx='120' cy='120' r='100' fill='none' stroke='#111' stroke-width='5' style='pointer-events:none'/><line x1='120' y1='120' x2='166' y2='120' stroke='#111' stroke-width='4' style='pointer-events:none'/><polygon points='176,120 160,112 160,128' fill='#111' style='pointer-events:none'/><circle cx='120' cy='120' r='5' fill='#111' style='pointer-events:none'/>" }
+            ] },
+          { kind: "select", hint: "Tap the colours that are equally likely.",
+            items: [["Orange", true], ["Blue", true], ["Green", false]] }
+        ],
         answer: "Orange and blue are equally likely (each [1/4]). Green covers [2/4], so it is twice as likely."
       }
     ],
@@ -249,58 +279,86 @@ UNITS.push({
       {
         type: "sr", focus: "Representing quantity fractions A",
         prompt: "Three gardeners have one open bag of potting mix each. One is [4/5] full, another is [2/5] full and the other is [3/5] full. How much potting mix do they have altogether?",
+        follow: "Share your strategies for finding the solution.",
         cubes: {"ops": ["+"], "solve": [{"t": "Add the fifths", "s": "4 fifths + 2 fifths + 3 fifths = 9 fifths = [9/5] = 1[4/5]."}, {"t": "Make a whole", "s": "Take [1/5] from the [2/5] bag to fill the [4/5] bag: 1 whole. [1/5] + [3/5] = [4/5] is left. Total 1[4/5] bags."}]},
-        interact: [{ kind: "input", fields: [{ value: 9/5, suffix: "bags", placeholder: "e.g. 1 1/2" }] }],
+        interact: [
+          { kind: "shade", parts: 5, pre: [0, 1, 2, 3] },
+          { kind: "shade", parts: 5, pre: [0, 1] },
+          { kind: "shade", parts: 5, pre: [0, 1, 2] },
+          { kind: "input", fields: [{ label: "Altogether", value: 9/5, suffix: "bags", placeholder: "e.g. 1 1/2" }] }
+        ],
         answer: "[4/5] + [2/5] + [3/5] = [9/5] = **1[4/5] bags**"
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "Use **rounding and estimation** to solve.",
+        prompt: "Use rounding and estimation to solve.",
         display: "16 429 + 648 957",
         interact: [{ kind: "input", fields: [{ label: "About", min: 660000, max: 670000 }] }],
         answer: "About 16 000 + 649 000 = **665 000** (exact: 665 386)"
       },
       {
         type: "sr", focus: "Non-spatial measure A: Mass",
-        prompt: "Which object in the classroom would be most appropriate to measure in **kilograms**?",
+        prompt: "Which object in the classroom would be most appropriate to measure in kilograms?",
         follow: "Communicate your thinking.",
+        interact: [{ kind: "select", hint: "Tap every object you would measure in kilograms.",
+          items: [["a pencil", false], ["a student chair", true], ["a sheet of paper", false], ["a schoolbag full of books", true], ["an eraser", false], ["a student desk", true]] }],
         answer: "Answers vary: anything heavier than about 1 kg, such as a chair, a schoolbag or a box of books. Light objects like pencils suit grams."
       },
       {
         type: "sr", focus: "Three-dimensional spatial structure A",
         prompt: "Mrs Leaver needs 1 litre of water, 550 mL of orange juice and 250 mL of milk for a class picnic. How many litres is that? Use decimal notation.",
         cubes: {"ops": ["+"], "solve": [{"t": "Use millilitres first", "s": "1000 mL + 550 mL + 250 mL = 1800 mL = 1.8 L."}, {"t": "Use decimals", "s": "550 mL = 0.55 L and 250 mL = 0.25 L. 1 + 0.55 + 0.25 = 1.8 L."}]},
-        interact: [{ kind: "input", fields: [{ value: 1.8, suffix: "L" }] }],
+        interact: [
+          { kind: "bar", whole: { v: 1800, l: "1.8 L", hide: true, n: "total" }, parts: [{ v: 1000, l: "1 L", n: "water" }, { v: 550, l: "550 mL", n: "juice" }, { v: 250, l: "250 mL", n: "milk" }], hint: "The parts are the three drinks. Tap the ? to reveal the total." },
+          { kind: "input", fields: [{ label: "Total", value: 1.8, suffix: "L" }] }
+        ],
         answer: "1 + 0.55 + 0.25 = **1.8 L**"
       }
     ],
     // Review 7
     [
       {
-        type: "mc", focus: "Representing quantity fractions B",
-        prompt: "What **fraction** of the hexagon is the blue rhombus?",
-        img: "hexagon.png",
-        options: ["[3/6]", "[6/12]", "[1/3]", "[2/10]"],
-        answer: 2,
-        explain: "The rhombus covers 2 of the 6 equal triangles in the hexagon: [2/6] = [1/3]."
+        type: "sr", focus: "Representing quantity fractions B",
+        prompt: "What fraction of the hexagon is the blue rhombus?",
+        interact: [
+          { kind: "classify", label: "Hexagon made of a blue rhombus, a green triangle and a red trapezium", view: [400, 360], total: 6, mark: "outline",
+            hint: "The dashed lines split the hexagon into 6 equal triangles. Choose a piece, then tap each triangle it covers.",
+            cats: [{ k: "b", t: "blue rhombus", c: "#F2994A" }, { k: "g", t: "green triangle", c: "#8A3CC4" }, { k: "r", t: "red trapezium", c: "#111111" }],
+            shapes: [
+              { p: "80,180 140,76 200,180", fill: "#1A56DB", a: "b" },
+              { p: "140,76 260,76 200,180", fill: "#1A56DB", a: "b" },
+              { p: "260,76 320,180 200,180", fill: "#98D660", a: "g" },
+              { p: "320,180 260,284 200,180", fill: "#E3241B", a: "r" },
+              { p: "260,284 140,284 200,180", fill: "#E3241B", a: "r" },
+              { p: "140,284 80,180 200,180", fill: "#E3241B", a: "r",
+                deco: "<g fill='none' style='pointer-events:none'><path d='M140,76 L200,180 M260,284 L200,180 M140,284 L200,180' stroke='#FFFFFF' stroke-width='2' stroke-dasharray='7 6'/><path d='M80,180 L140,76 L260,76 L200,180 Z M260,76 L320,180 M80,180 L320,180 L260,284 L140,284 Z' stroke='#111' stroke-width='5' stroke-linejoin='round'/></g>" }
+            ] },
+          { kind: "choose", rows: [{ t: "The blue rhombus is", options: ["[3/6]", "[6/12]", "[1/3]", "[2/10]"], a: 2 }] }
+        ],
+        answer: "**[1/3]** (option C). The rhombus covers 2 of the 6 equal triangles: [2/6] = [1/3].",
+        explain: "Options from the slide: A [3/6], B [6/12], C [1/3], D [2/10]. The triangle lines are added so the class can see the 6 equal parts."
       },
       {
         type: "sr", focus: "Representing quantity fractions A",
         prompt: "On a road trip a family listens to 10% of an audio book on day 1 and one quarter ([1/4]) on day 2. How much of the book is left?",
         cubes: {"ops": ["−"], "also": ["+"], "solve": [{"t": "Use percentages", "s": "[1/4] = 25%. 10% + 25% = 35% listened to. 100% − 35% = 65% left."}, {"t": "Draw a bar model", "s": "Split a bar into 20 parts (5% each). 10% is 2 parts and [1/4] is 5 parts. 7 parts are used, so 13 parts are left: [13/20] = 65%."}]},
-        interact: [{ kind: "input", fields: [{ value: 65, suffix: "%" }] }],
+        interact: [
+          { kind: "shade", parts: 20, pct: true, hint: "Each part is 5% of the book. Shade day 1, then day 2." },
+          { kind: "input", fields: [{ label: "Left", value: 65, suffix: "%" }] }
+        ],
         answer: "100% − 10% − 25% = **65%** (or [13/20]) left"
       },
       {
         type: "sr", focus: "Additive relations A",
-        prompt: "Use **estimation** to find the answer.",
+        prompt: "Use estimation to find the answer.",
         display: "43 893 + 92 107",
+        follow: "Justify the reasonableness of your solution.",
         interact: [{ kind: "input", fields: [{ label: "About", min: 135000, max: 137000 }] }],
         answer: "About 44 000 + 92 000 = **136 000**. The exact answer is also 136 000 (893 + 107 makes 1000)."
       },
       {
         type: "sr", focus: "Non-spatial measure A: Mass",
-        prompt: "Record the masses in **decimal notation**.",
+        prompt: "Record the masses in decimal notation.",
         interact: [{ kind: "input", fields: [
           { label: "2 kg and 350 g", value: 2.35, suffix: "kg" },
           { label: "1 kg and 982 g", value: 1.982, suffix: "kg" },
@@ -309,7 +367,11 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Geometric measure A: Angles",
-        prompt: "Describe how to use a **protractor** to measure an angle less than 90°.",
+        prompt: "Describe how to use a protractor to measure an angle less than 90°.",
+        interact: [
+          { kind: "angle", names: true, degrees: true, start: 50 },
+          { kind: "order", items: ["Read the scale from 0° to the other arm", "Put the centre point of the protractor on the vertex", "Check the reading is less than 90°", "Line up the baseline (0°) with one arm"], answer: [1, 3, 0, 2] }
+        ],
         answer: "Put the centre point on the vertex. Line up the baseline (0°) with one arm. Read the scale that starts at 0 on that arm, where the other arm crosses. Check the reading is less than 90°."
       }
     ],
@@ -317,7 +379,7 @@ UNITS.push({
     [
       {
         type: "tf", focus: "Representing quantity fractions A",
-        prompt: "Amy says the answer to this **fraction number sentence** is [20/6]. Is she correct?",
+        prompt: "Amy says the answer to this fraction number sentence is [20/6]. Is she correct?",
         display: "2 + [6/6] + [2/6]",
         answer: true,
         explain: "2 = [12/6], so [12/6] + [6/6] + [2/6] = [20/6]."
@@ -349,6 +411,7 @@ UNITS.push({
       {
         type: "sr", focus: "Additive relations A",
         prompt: "Estimate the total distance.",
+        follow: "Communicate the reasonableness of your estimation.",
         cubes: {"ops": ["+"], "solve": [{"t": "Round to the nearest 10", "s": "200 + 560 + 250 + 180 + 260 = 1450 km."}, {"t": "Round to the nearest 100", "s": "200 + 600 + 200 + 200 + 300 = 1500 km. Quicker, but a rougher estimate."}]},
         list: [
           "Broken Hill, Wilyakali Country to Wilcannia, Barkindji Country: 197 km",
@@ -362,7 +425,7 @@ UNITS.push({
       },
       {
         type: "sr", focus: "Non-spatial measure A: Mass",
-        prompt: "Interpret the **decimal notation** for these masses.",
+        prompt: "Interpret the decimal notation for these masses.",
         interact: [{ kind: "input", fields: [
           { label: "4.8 kg =", value: 4800, suffix: "g" },
           { label: "0.875 kg =", value: 875, suffix: "g" },
