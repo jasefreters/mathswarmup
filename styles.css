@@ -1,4 +1,10 @@
 /* Layout: a quiet exercise-book board. Year tabs and tools in one top bar; five numbered question cards; one question at a time when opened, with its own hands-on activity. */
+/* Maths symbols the school font lacks (− × ÷ ≠ ≈ ≤ ≥ arrows □) come from a system font, so they never show as empty boxes. */
+@font-face {
+  font-family: "DD Maths Symbols";
+  src: local("Arial"), local("Helvetica"), local("Segoe UI"), local("Roboto"), local("Arimo"), local("Liberation Sans"), local("DejaVu Sans"), local("Noto Sans");
+  unicode-range: U+00D7, U+00F7, U+2190-2193, U+2212, U+2248, U+2260, U+2264-2265, U+25A1;
+}
 :root {
   --paper: #F4F6FA;
   --gridline: rgba(36, 73, 216, 0.05);
@@ -31,7 +37,7 @@
   --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
   /* School handwriting font for question text: the NSW font when it is installed on the device, otherwise a free foundation-style font. */
-  --f-school: "NSWPreCursiveSolid", "NSW Pre-Cursive Solid", "NSW Pre-cursive Solid", "Edu NSW ACT Foundation", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --f-school: "DD Maths Symbols", "NSWPreCursiveSolid", "NSW Pre-Cursive Solid", "NSW Pre-cursive Solid", "Edu NSW ACT Foundation", "Atkinson Hyperlegible", system-ui, sans-serif;
   --r: 14px;
 }
 @media (prefers-color-scheme: dark) {
