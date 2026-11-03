@@ -1688,26 +1688,29 @@
   }
   const pickFrom = (list) => list[Math.floor(Math.random() * list.length)];
   // Slots left on Random get a topic the teacher hasn't chosen, so the day covers 5 different topics where the bank allows.
-  function resolveTopics(slots, pool) {
-    const avail = TOPICS.filter((t) => pool.some((b) => b.topic === t)), out = slots.slice();
+  // word: the last question must be a word problem (one with CUBES), so its topic comes from those.
+  const wordsOnly = (pool) => pool.filter((b) => b.q.cubes);
+  const topicsIn = (pool) => TOPICS.filter((t) => pool.some((b) => b.topic === t));
+  function resolveTopics(slots, pool, word) {
+    const out = slots.slice();
     out.forEach((t, i) => {
       if (t) return;
-      const fresh = avail.filter((x) => !out.includes(x));
+      const avail = topicsIn(word && i === out.length - 1 ? wordsOnly(pool) : pool), fresh = avail.filter((x) => !out.includes(x));
       out[i] = fresh.length ? pickFrom(fresh) : pickFrom(avail);
     });
     return out;
   }
-  function drawQuestion(pool, topic, used) {
-    const list = pool.filter((b) => b.topic === topic && !used.includes(b.key));
+  function drawQuestion(pool, topic, used, word) {
+    const list = (word ? wordsOnly(pool) : pool).filter((b) => b.topic === topic && !used.includes(b.key));
     const b = list.length ? pickFrom(list) : null;
-    return b && { q: b.q, unit: b.unit, key: b.key, topic, from: fromLabel(b.unit, b.d, topic) };
+    return b && { q: b.q, unit: b.unit, key: b.key, topic, word: !!word, from: fromLabel(b.unit, b.d, topic) + (word ? " · Word problem" : "") };
   }
   // slots holds the teacher's own choices (null = random) for reopening the dialog; shown is the topic each question uses.
-  function buildCustom(years, slots, shown) {
-    const pool = bank(years), topics = resolveTopics(shown || slots, pool), out = [];
-    topics.forEach((t) => { const it = drawQuestion(pool, t, out.map((x) => x.key)); if (it) out.push(it); });
+  function buildCustom(years, slots, shown, word) {
+    const pool = bank(years), topics = resolveTopics(shown || slots, pool, word), out = [];
+    topics.forEach((t, i) => { const it = drawQuestion(pool, t, out.map((x) => x.key), word && i === topics.length - 1); if (it) out.push(it); });
     if (!out.length) return false;
-    state.custom = { years, slots }; state.mixed = out;
+    state.custom = { years, slots, word: !!word }; state.mixed = out;
     return true;
   }
   function itemFromKey(k) {
@@ -1727,24 +1730,37 @@
     const m = /^#day=([\w,-]+)$/.exec(location.hash); if (!m) return;
     const list = m[1].split(",").map(itemFromKey).filter(Boolean).slice(0, 5); if (!list.length) return;
     const years = [...new Set(list.map((it) => yearOfUnit(it.unit).year))].sort();
-    state.custom = { years, slots: list.map((it) => it.topic) }; state.mixed = list;
+    // A shared day whose last question is a word problem reopens with that option on.
+    const last = list[list.length - 1], word = list.length === 5 && !!last.q.cubes;
+    if (word) { last.word = true; last.from += " · Word problem"; }
+    state.custom = { years, slots: list.map((it) => it.topic), word }; state.mixed = list;
   }
   // manual marks the slots the teacher chose by hand; Pick random topics only changes the others.
-  const cdlg = { years: [], slots: [null, null, null, null, null], manual: [false, false, false, false, false] };
+  const cdlg = { years: [], slots: [null, null, null, null, null], manual: [false, false, false, false, false], word: false };
   function openCustom() {
     const c = state.custom;
     cdlg.years = c ? c.years.slice() : [state.year];
     cdlg.slots = c ? state.mixed.map((it) => it.topic).concat([null, null, null, null, null]).slice(0, 5) : [null, null, null, null, null];
     cdlg.manual = cdlg.slots.map((t, i) => !!(c && c.slots[i]));
+    cdlg.word = !!(c && c.word);
     renderCustom(); $("customMsg").textContent = ""; $("custom").hidden = false; $("customClose").focus();
   }
   function renderCustom() {
     $("customYears").innerHTML = YEARS.map((y) => "<button class='btn' data-cyear='" + y.year + "' aria-pressed='" + cdlg.years.includes(y.year) + "'>Year " + y.year + "</button>").join("");
-    const pool = bank(cdlg.years), count = (t) => pool.filter((b) => b.topic === t).length;
-    $("customSlots").innerHTML = cdlg.slots.map((t, i) => "<li><label><span>Question " + (i + 1) + "</span><select data-cslot='" + i + "'><option value=''>Random topic</option>" +
-      TOPICS.map((x) => { const n = count(x); return "<option value='" + esc(x) + "'" + (x === t ? " selected" : "") + (n ? "" : " disabled") + ">" + esc(x) + " (" + n + ")</option>"; }).join("") +
-      "</select></label></li>").join("");
+    const pool = bank(cdlg.years), words = wordsOnly(pool);
+    $("customSlots").innerHTML = cdlg.slots.map((t, i) => {
+      const src = cdlg.word && i === 4 ? words : pool, count = (x) => src.filter((b) => b.topic === x).length;
+      return "<li><label><span>Question " + (i + 1) + "</span><select data-cslot='" + i + "'><option value=''>Random topic</option>" +
+        TOPICS.map((x) => { const n = count(x); return "<option value='" + esc(x) + "'" + (x === t ? " selected" : "") + (n ? "" : " disabled") + ">" + esc(x) + " (" + n + ")</option>"; }).join("") +
+        "</select></label></li>";
+    }).join("") + "<li class='cword'><label><input type='checkbox' data-cword" + (cdlg.word ? " checked" : "") + "> Make question 5 a word problem (with CUBES)</label></li>";
     $("customBuild").disabled = !cdlg.years.length;
+  }
+  // Clear any chosen topic that has no questions for the ticked years (or no word problems, for question 5).
+  function fitSlots() {
+    const pool = bank(cdlg.years), words = wordsOnly(pool);
+    cdlg.slots = cdlg.slots.map((t, i) => (t && (cdlg.word && i === 4 ? words : pool).some((b) => b.topic === t) ? t : null));
+    cdlg.manual = cdlg.manual.map((m, k) => m && !!cdlg.slots[k]);
   }
   function bindCustom() {
     $("customYears").addEventListener("click", (e) => {
@@ -1752,16 +1768,17 @@
       const y = +b.dataset.cyear, i = cdlg.years.indexOf(y);
       if (i < 0) cdlg.years.push(y); else cdlg.years.splice(i, 1);
       cdlg.years.sort();
-      const pool = bank(cdlg.years);
-      cdlg.slots = cdlg.slots.map((t) => (t && pool.some((b) => b.topic === t) ? t : null));
-      cdlg.manual = cdlg.manual.map((m, k) => m && !!cdlg.slots[k]);
+      fitSlots();
       renderCustom();
       $("customMsg").textContent = cdlg.years.length ? "" : "Tick at least one year.";
     });
-    $("customSlots").addEventListener("change", (e) => { const s = e.target.closest("[data-cslot]"); if (s) { cdlg.slots[+s.dataset.cslot] = s.value || null; cdlg.manual[+s.dataset.cslot] = !!s.value; } });
-    $("customRoll").onclick = () => { cdlg.slots = resolveTopics(cdlg.slots.map((t, i) => (cdlg.manual[i] ? t : null)), bank(cdlg.years)); renderCustom(); };
+    $("customSlots").addEventListener("change", (e) => {
+      if (e.target.matches("[data-cword]")) { cdlg.word = e.target.checked; fitSlots(); renderCustom(); return; }
+      const s = e.target.closest("[data-cslot]"); if (s) { cdlg.slots[+s.dataset.cslot] = s.value || null; cdlg.manual[+s.dataset.cslot] = !!s.value; }
+    });
+    $("customRoll").onclick = () => { cdlg.slots = resolveTopics(cdlg.slots.map((t, i) => (cdlg.manual[i] ? t : null)), bank(cdlg.years), cdlg.word); renderCustom(); };
     $("customBuild").onclick = () => {
-      if (!buildCustom(cdlg.years, cdlg.slots.map((t, i) => (cdlg.manual[i] ? t : null)), cdlg.slots.slice())) { $("customMsg").textContent = "No questions match. Tick another year."; return; }
+      if (!buildCustom(cdlg.years, cdlg.slots.map((t, i) => (cdlg.manual[i] ? t : null)), cdlg.slots.slice(), cdlg.word)) { $("customMsg").textContent = "No questions match. Tick another year."; return; }
       $("custom").hidden = true; render();
     };
     $("customClose").onclick = () => { $("custom").hidden = true; };
@@ -1774,8 +1791,8 @@
   function flash(msg) { const b = $("bCustomLink"); if (!b) return; b.textContent = msg; setTimeout(() => { if ($("bCustomLink")) $("bCustomLink").textContent = "Copy link"; }, 1600); }
   // Swap one question for another from the same topic.
   function swapSpot() {
-    const it = state.mixed[state.spot], nu = drawQuestion(bank(state.custom.years), it.topic, state.mixed.map((x) => x.key));
-    if (!nu) { $("sSwap").textContent = "No other " + it.topic.toLowerCase() + " questions"; return; }
+    const it = state.mixed[state.spot], nu = drawQuestion(bank(state.custom.years), it.topic, state.mixed.map((x) => x.key), it.word);
+    if (!nu) { $("sSwap").textContent = "No other " + it.topic.toLowerCase() + (it.word ? " word problems" : " questions"); return; }
     state.mixed[state.spot] = nu; syncHash(); renderSpot();
   }
 
@@ -1847,7 +1864,7 @@
     if ((b = t.closest("[data-day]"))) { state.day = +b.dataset.day; state.mixed = state.custom = null; render(); return; }
     if (t.closest("#bMix")) { state.custom = null; state.mixed = buildMix(); render(); return; }
     if (t.closest("#bCustom")) { openCustom(); return; }
-    if (t.closest("#bCustomNew")) { buildCustom(state.custom.years, state.custom.slots, state.mixed.map((it) => it.topic)); render(); return; }
+    if (t.closest("#bCustomNew")) { buildCustom(state.custom.years, state.custom.slots, state.mixed.map((it) => it.topic), state.custom.word); render(); return; }
     if (t.closest("#bCustomLink")) { copyLink(); return; }
     if (t.closest("#sSwap")) { swapSpot(); return; }
     if (t.closest("#bClear")) { items().forEach((it) => done.delete(it.key)); saveDone(); render(); return; }

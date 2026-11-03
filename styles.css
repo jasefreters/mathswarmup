@@ -682,3 +682,6 @@ footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; dis
 .cslots label { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); align-items: center; gap: 10px; }
 .cslots label > span { font-weight: 700; }
 .cslots select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); min-width: 0; width: 100%; }
+.cslots .cword label { display: flex; gap: 10px; align-items: center; font-weight: 700; padding-left: calc(7.5em + 10px); }
+.cslots .cword input { width: 20px; height: 20px; accent-color: var(--accent); }
+@media (max-width: 560px) { .cslots .cword label { padding-left: 0; } }
