@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Edu+NSW+ACT+Foundation:wght@400..700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
-<link rel="stylesheet" href="styles.css?v=202611022336">
+<link rel="stylesheet" href="styles.css?v=202611032116">
 </head>
 <body>
 <header class="bar">
@@ -54,6 +54,7 @@
     <span class="eyebrow" id="sCount" style="margin:0"></span>
     <span class="spacer"></span>
     <span id="spotTimer"></span>
+    <button class="btn" id="sSwap" hidden title="Swap for another question on the same topic">Swap question</button>
     <button class="btn" id="sDraw" aria-pressed="false" title="Draw on the question (D)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l4-1L19 8l-3-3L5 16z"/></svg>Draw</button>
     <button class="btn" id="sFlag" aria-pressed="false" title="Flag this question for a fix"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>Flag</button>
     <button class="btn" id="sAns" aria-pressed="false">Show answer</button>
@@ -75,6 +76,16 @@
   <div class="spot-main" id="spotMain"><div class="wrap" id="spotBody"></div><canvas class="ink" id="ink" aria-hidden="true"></canvas></div>
 </div>
 
+<div class="flags" id="custom" hidden role="dialog" aria-modal="true" aria-labelledby="customH">
+  <div class="flags-card">
+    <div class="flags-top"><h2 id="customH">Build a day</h2><button class="btn" id="customClose">Close</button></div>
+    <p class="ph">Choose a topic for each question, or leave it on Random topic. Questions come from every Review of learning for the years you tick. The number beside each topic is how many questions it has.</p>
+    <div class="cyears"><span>Questions from</span><div id="customYears"></div></div>
+    <ol class="cslots" id="customSlots"></ol>
+    <div class="checkrow"><button class="btn primary" id="customBuild">Build the day</button><button class="btn" id="customRoll">Pick random topics for me</button><span class="ph" id="customMsg" aria-live="polite"></span></div>
+  </div>
+</div>
+
 <div class="flags" id="flags" hidden role="dialog" aria-modal="true" aria-labelledby="flagsH">
   <div class="flags-card">
     <div class="flags-top"><h2 id="flagsH">Flagged questions</h2><button class="btn" id="flagsClose">Close</button></div>
@@ -84,89 +95,89 @@
   </div>
 </div>
 
-<script src="config.js?v=202611022336"></script>
-<script src="scope.js?v=202611022336"></script>
-<script src="units/s2a-unit1.js?v=202611022336"></script>
-<script src="units/s3a-unit1.js?v=202611022336"></script>
-<script src="units/s3a-unit16.js?v=202611022336"></script>
-<script src="units/s2b-unit36.js?v=202611022336"></script>
-<script src="units/s2b-unit21.js?v=202611022336"></script>
-<script src="units/s3b-unit21.js?v=202611022336"></script>
-<script src="units/s2a-unit2.js?v=202611022336"></script>
-<script src="units/s2b-unit22.js?v=202611022336"></script>
-<script src="units/s3a-unit2.js?v=202611022336"></script>
-<script src="units/s3b-unit22.js?v=202611022336"></script>
-<script src="units/s2a-unit3.js?v=202611022336"></script>
-<script src="units/s2b-unit23.js?v=202611022336"></script>
-<script src="units/s3a-unit3.js?v=202611022336"></script>
-<script src="units/s3b-unit23.js?v=202611022336"></script>
-<script src="units/s2b-unit24.js?v=202611022336"></script>
-<script src="units/s2a-unit5.js?v=202611022336"></script>
-<script src="units/s2a-unit4.js?v=202611022336"></script>
-<script src="units/s2b-unit25.js?v=202611022336"></script>
-<script src="units/s3a-unit5.js?v=202611022336"></script>
-<script src="units/s3b-unit24.js?v=202611022336"></script>
-<script src="units/s3a-unit4.js?v=202611022336"></script>
-<script src="units/s3b-unit25.js?v=202611022336"></script>
-<script src="units/s2a-unit6.js?v=202611022336"></script>
-<script src="units/s3a-unit6.js?v=202611022336"></script>
-<script src="units/s2b-unit26.js?v=202611022336"></script>
-<script src="units/s3b-unit26.js?v=202611022336"></script>
-<script src="units/s3a-unit7.js?v=202611022336"></script>
-<script src="units/s2a-unit7.js?v=202611022336"></script>
-<script src="units/s2b-unit27.js?v=202611022336"></script>
-<script src="units/s3b-unit27.js?v=202611022336"></script>
-<script src="units/s2a-unit8.js?v=202611022336"></script>
-<script src="units/s2b-unit28.js?v=202611022336"></script>
-<script src="units/s3a-unit8.js?v=202611022336"></script>
-<script src="units/s3b-unit28.js?v=202611022336"></script>
-<script src="units/s3a-unit9.js?v=202611022336"></script>
-<script src="units/s2b-unit29.js?v=202611022336"></script>
-<script src="units/s2a-unit9.js?v=202611022336"></script>
-<script src="units/s3b-unit29.js?v=202611022336"></script>
-<script src="units/s3a-unit10.js?v=202611022336"></script>
-<script src="units/s2a-unit10.js?v=202611022336"></script>
-<script src="units/s3b-unit30.js?v=202611022336"></script>
-<script src="units/s2b-unit30.js?v=202611022336"></script>
-<script src="units/s3a-unit11.js?v=202611022336"></script>
-<script src="units/s3b-unit31.js?v=202611022336"></script>
-<script src="units/s2b-unit31.js?v=202611022336"></script>
-<script src="units/s2a-unit11.js?v=202611022336"></script>
-<script src="units/s3a-unit12.js?v=202611022336"></script>
-<script src="units/s3b-unit32.js?v=202611022336"></script>
-<script src="units/s2a-unit12.js?v=202611022336"></script>
-<script src="units/s2b-unit32.js?v=202611022336"></script>
-<script src="units/s2b-unit33.js?v=202611022336"></script>
-<script src="units/s2a-unit13.js?v=202611022336"></script>
-<script src="units/s3a-unit13.js?v=202611022336"></script>
-<script src="units/s3b-unit33.js?v=202611022336"></script>
-<script src="units/units/s3b-unit34.js?v=202611022336"></script>
-<script src="units/s3b-unit34.js?v=202611022336"></script>
-<script src="units/s3a-unit14.js?v=202611022336"></script>
-<script src="units/s2b-unit34.js?v=202611022336"></script>
-<script src="units/s2a-unit14.js?v=202611022336"></script>
-<script src="units/s3b-unit35.js?v=202611022336"></script>
-<script src="units/s3a-unit15.js?v=202611022336"></script>
-<script src="units/s2b-unit35.js?v=202611022336"></script>
-<script src="units/s2a-unit15.js?v=202611022336"></script>
-<script src="units/s2a-unit16.js?v=202611022336"></script>
-<script src="units/s3b-unit36.js?v=202611022336"></script>
-<script src="units/s3a-unit17.js?v=202611022336"></script>
-<script src="units/s2a-unit17.js?v=202611022336"></script>
-<script src="units/s2b-unit37.js?v=202611022336"></script>
-<script src="units/s3b-unit37.js?v=202611022336"></script>
-<script src="units/s3a-unit18.js?v=202611022336"></script>
-<script src="units/s2b-unit38.js?v=202611022336"></script>
-<script src="units/s3b-unit38.js?v=202611022336"></script>
-<script src="units/s2a-unit18.js?v=202611022336"></script>
-<script src="units/s3b-unit39.js?v=202611022336"></script>
-<script src="units/s3a-unit19.js?v=202611022336"></script>
-<script src="units/s2a-unit19.js?v=202611022336"></script>
-<script src="units/s2b-unit39.js?v=202611022336"></script>
-<script src="units/s2b-unit40.js?v=202611022336"></script>
-<script src="units/s2a-unit20.js?v=202611022336"></script>
-<script src="units/s3b-unit40.js?v=202611022336"></script>
-<script src="units/s3a-unit20.js?v=202611022336"></script>
-<script src="app.js?v=202611022336"></script>
+<script src="config.js?v=202611032116"></script>
+<script src="scope.js?v=202611032116"></script>
+<script src="units/s2a-unit1.js?v=202611032116"></script>
+<script src="units/s3a-unit1.js?v=202611032116"></script>
+<script src="units/s3a-unit16.js?v=202611032116"></script>
+<script src="units/s2b-unit36.js?v=202611032116"></script>
+<script src="units/s2b-unit21.js?v=202611032116"></script>
+<script src="units/s3b-unit21.js?v=202611032116"></script>
+<script src="units/s2a-unit2.js?v=202611032116"></script>
+<script src="units/s2b-unit22.js?v=202611032116"></script>
+<script src="units/s3a-unit2.js?v=202611032116"></script>
+<script src="units/s3b-unit22.js?v=202611032116"></script>
+<script src="units/s2a-unit3.js?v=202611032116"></script>
+<script src="units/s2b-unit23.js?v=202611032116"></script>
+<script src="units/s3a-unit3.js?v=202611032116"></script>
+<script src="units/s3b-unit23.js?v=202611032116"></script>
+<script src="units/s2b-unit24.js?v=202611032116"></script>
+<script src="units/s2a-unit5.js?v=202611032116"></script>
+<script src="units/s2a-unit4.js?v=202611032116"></script>
+<script src="units/s2b-unit25.js?v=202611032116"></script>
+<script src="units/s3a-unit5.js?v=202611032116"></script>
+<script src="units/s3b-unit24.js?v=202611032116"></script>
+<script src="units/s3a-unit4.js?v=202611032116"></script>
+<script src="units/s3b-unit25.js?v=202611032116"></script>
+<script src="units/s2a-unit6.js?v=202611032116"></script>
+<script src="units/s3a-unit6.js?v=202611032116"></script>
+<script src="units/s2b-unit26.js?v=202611032116"></script>
+<script src="units/s3b-unit26.js?v=202611032116"></script>
+<script src="units/s3a-unit7.js?v=202611032116"></script>
+<script src="units/s2a-unit7.js?v=202611032116"></script>
+<script src="units/s2b-unit27.js?v=202611032116"></script>
+<script src="units/s3b-unit27.js?v=202611032116"></script>
+<script src="units/s2a-unit8.js?v=202611032116"></script>
+<script src="units/s2b-unit28.js?v=202611032116"></script>
+<script src="units/s3a-unit8.js?v=202611032116"></script>
+<script src="units/s3b-unit28.js?v=202611032116"></script>
+<script src="units/s3a-unit9.js?v=202611032116"></script>
+<script src="units/s2b-unit29.js?v=202611032116"></script>
+<script src="units/s2a-unit9.js?v=202611032116"></script>
+<script src="units/s3b-unit29.js?v=202611032116"></script>
+<script src="units/s3a-unit10.js?v=202611032116"></script>
+<script src="units/s2a-unit10.js?v=202611032116"></script>
+<script src="units/s3b-unit30.js?v=202611032116"></script>
+<script src="units/s2b-unit30.js?v=202611032116"></script>
+<script src="units/s3a-unit11.js?v=202611032116"></script>
+<script src="units/s3b-unit31.js?v=202611032116"></script>
+<script src="units/s2b-unit31.js?v=202611032116"></script>
+<script src="units/s2a-unit11.js?v=202611032116"></script>
+<script src="units/s3a-unit12.js?v=202611032116"></script>
+<script src="units/s3b-unit32.js?v=202611032116"></script>
+<script src="units/s2a-unit12.js?v=202611032116"></script>
+<script src="units/s2b-unit32.js?v=202611032116"></script>
+<script src="units/s2b-unit33.js?v=202611032116"></script>
+<script src="units/s2a-unit13.js?v=202611032116"></script>
+<script src="units/s3a-unit13.js?v=202611032116"></script>
+<script src="units/s3b-unit33.js?v=202611032116"></script>
+<script src="units/units/s3b-unit34.js?v=202611032116"></script>
+<script src="units/s3b-unit34.js?v=202611032116"></script>
+<script src="units/s3a-unit14.js?v=202611032116"></script>
+<script src="units/s2b-unit34.js?v=202611032116"></script>
+<script src="units/s2a-unit14.js?v=202611032116"></script>
+<script src="units/s3b-unit35.js?v=202611032116"></script>
+<script src="units/s3a-unit15.js?v=202611032116"></script>
+<script src="units/s2b-unit35.js?v=202611032116"></script>
+<script src="units/s2a-unit15.js?v=202611032116"></script>
+<script src="units/s2a-unit16.js?v=202611032116"></script>
+<script src="units/s3b-unit36.js?v=202611032116"></script>
+<script src="units/s3a-unit17.js?v=202611032116"></script>
+<script src="units/s2a-unit17.js?v=202611032116"></script>
+<script src="units/s2b-unit37.js?v=202611032116"></script>
+<script src="units/s3b-unit37.js?v=202611032116"></script>
+<script src="units/s3a-unit18.js?v=202611032116"></script>
+<script src="units/s2b-unit38.js?v=202611032116"></script>
+<script src="units/s3b-unit38.js?v=202611032116"></script>
+<script src="units/s2a-unit18.js?v=202611032116"></script>
+<script src="units/s3b-unit39.js?v=202611032116"></script>
+<script src="units/s3a-unit19.js?v=202611032116"></script>
+<script src="units/s2a-unit19.js?v=202611032116"></script>
+<script src="units/s2b-unit39.js?v=202611032116"></script>
+<script src="units/s2b-unit40.js?v=202611032116"></script>
+<script src="units/s2a-unit20.js?v=202611032116"></script>
+<script src="units/s3b-unit40.js?v=202611032116"></script>
+<script src="units/s3a-unit20.js?v=202611032116"></script>
+<script src="app.js?v=202611032116"></script>
 </body>
 </html>

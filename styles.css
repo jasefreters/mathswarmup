@@ -674,3 +674,11 @@ footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; dis
 .flags-list li { min-width: 0; overflow-wrap: anywhere; }
 .flags-list small { display: block; color: var(--muted); }
 .flags-list .go { border: 0; background: none; color: var(--accent); font-weight: 700; padding: 0; cursor: pointer; text-decoration: underline; }
+.cyears { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.cyears > span { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.cyears > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.cyears .btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.cslots { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.cslots label { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); align-items: center; gap: 10px; }
+.cslots label > span { font-weight: 700; }
+.cslots select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); min-width: 0; width: 100%; }
