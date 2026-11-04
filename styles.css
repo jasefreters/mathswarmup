@@ -679,8 +679,10 @@ footer .wrap { padding-block: 0 28px; color: var(--muted); font-size: .8rem; dis
 .cyears > div { display: flex; flex-wrap: wrap; gap: 6px; }
 .cyears .btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
 .cslots { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
-.cslots label { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); align-items: center; gap: 10px; }
-.cslots label > span { font-weight: 700; }
+.cslots li:not(.cword) { display: grid; grid-template-columns: 7.5em minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 10px; }
+.cslots li > span { font-weight: 700; }
+.cslots select:disabled { color: var(--muted); }
+@media (max-width: 560px) { .cslots li:not(.cword) { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
 .cslots select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); min-width: 0; width: 100%; }
 .cslots .cword label { display: flex; gap: 10px; align-items: center; font-weight: 700; padding-left: calc(7.5em + 10px); }
 .cslots .cword input { width: 20px; height: 20px; accent-color: var(--accent); }

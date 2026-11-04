@@ -1675,14 +1675,17 @@
     if (/position/.test(f) || (!/length/.test(f) && has(/\bmap\b|grid|coordinate|compass|north|south|east|west|direction|position|left|right of/))) return "Position and maps";
     return "Length and perimeter";
   }
+  // Each question's topic and skill come from skills.js (tagged by reading every question); topicOf is the fallback.
+  const SKILL_LIST = window.SKILL_LIST || {}, SKILL_TAGS = window.SKILL_TAGS || {};
+  function tagOf(key, q) { const t = SKILL_TAGS[key]; return t ? t.split("|") : [topicOf(q), null]; }
   const yearOfUnit = (u) => YEARS.find((y) => y.stage === u.stage && y.ab === u.ab);
-  const fromLabel = (u, d, topic) => topic + " · Y" + yearOfUnit(u).year + " T" + u.term + " Wk " + weekOf(u.ls, d);
+  const fromLabel = (u, d, topic, skill) => (skill || topic) + " · Y" + yearOfUnit(u).year + " T" + u.term + " Wk " + weekOf(u.ls, d);
   function bank(years) {
     const out = [];
     UNITS.forEach((u) => {
       const y = yearOfUnit(u);
       if (!y || !years.includes(y.year)) return;
-      u.reviews.forEach((rev, d) => rev.forEach((q, i) => out.push({ q, unit: u, key: qKey(u, d, i), topic: topicOf(q), d })));
+      u.reviews.forEach((rev, d) => rev.forEach((q, i) => { const key = qKey(u, d, i), [topic, skill] = tagOf(key, q); out.push({ q, unit: u, key, topic, skill, d }); }));
     });
     return out;
   }
@@ -1700,17 +1703,19 @@
     });
     return out;
   }
-  function drawQuestion(pool, topic, used, word) {
-    const list = (word ? wordsOnly(pool) : pool).filter((b) => b.topic === topic && !used.includes(b.key));
+  // skill: null for any skill in the topic. The item keeps the skill asked for, so Swap stays within it.
+  function drawQuestion(pool, topic, used, word, skill) {
+    const list = (word ? wordsOnly(pool) : pool).filter((b) => b.topic === topic && (!skill || b.skill === skill) && !used.includes(b.key));
     const b = list.length ? pickFrom(list) : null;
-    return b && { q: b.q, unit: b.unit, key: b.key, topic, word: !!word, from: fromLabel(b.unit, b.d, topic) + (word ? " · Word problem" : "") };
+    return b && { q: b.q, unit: b.unit, key: b.key, topic, skill: skill || null, word: !!word, from: fromLabel(b.unit, b.d, topic, b.skill) + (word ? " · Word problem" : "") };
   }
-  // slots holds the teacher's own choices (null = random) for reopening the dialog; shown is the topic each question uses.
-  function buildCustom(years, slots, shown, word) {
+  // slots and skills hold the teacher's own choices (null = random or any) for reopening the dialog; shown is the topic each question uses.
+  function buildCustom(years, slots, shown, word, skills) {
     const pool = bank(years), topics = resolveTopics(shown || slots, pool, word), out = [];
-    topics.forEach((t, i) => { const it = drawQuestion(pool, t, out.map((x) => x.key), word && i === topics.length - 1); if (it) out.push(it); });
+    skills = skills || [];
+    topics.forEach((t, i) => { const it = drawQuestion(pool, t, out.map((x) => x.key), word && i === topics.length - 1, skills[i]); if (it) out.push(it); });
     if (!out.length) return false;
-    state.custom = { years, slots, word: !!word }; state.mixed = out;
+    state.custom = { years, slots, skills, word: !!word }; state.mixed = out;
     return true;
   }
   function itemFromKey(k) {
@@ -1718,8 +1723,8 @@
     const u = m && UNITS.find((x) => x.stage === +m[1] && x.ab === m[2] && x.unit === +m[3]);
     const q = u && u.reviews[+m[4]] && u.reviews[+m[4]][+m[5]];
     if (!q || !yearOfUnit(u)) return null;
-    const topic = topicOf(q);
-    return { q, unit: u, key: k, topic, from: fromLabel(u, +m[4], topic) };
+    const [topic, skill] = tagOf(k, q);
+    return { q, unit: u, key: k, topic, skill: null, from: fromLabel(u, +m[4], topic, skill) };
   }
   // A custom day lives in the address (#day=…), so the same 5 questions open from a bookmark or a shared link.
   function syncHash() {
@@ -1736,12 +1741,13 @@
     state.custom = { years, slots: list.map((it) => it.topic), word }; state.mixed = list;
   }
   // manual marks the slots the teacher chose by hand; Pick random topics only changes the others.
-  const cdlg = { years: [], slots: [null, null, null, null, null], manual: [false, false, false, false, false], word: false };
+  const cdlg = { years: [], slots: [null, null, null, null, null], skills: [null, null, null, null, null], manual: [false, false, false, false, false], word: false };
   function openCustom() {
     const c = state.custom;
     cdlg.years = c ? c.years.slice() : [state.year];
     cdlg.slots = c ? state.mixed.map((it) => it.topic).concat([null, null, null, null, null]).slice(0, 5) : [null, null, null, null, null];
     cdlg.manual = cdlg.slots.map((t, i) => !!(c && c.slots[i]));
+    cdlg.skills = [0, 1, 2, 3, 4].map((i) => (c && c.skills && c.skills[i]) || null);
     cdlg.word = !!(c && c.word);
     renderCustom(); $("customMsg").textContent = ""; $("custom").hidden = false; $("customClose").focus();
   }
@@ -1750,9 +1756,12 @@
     const pool = bank(cdlg.years), words = wordsOnly(pool);
     $("customSlots").innerHTML = cdlg.slots.map((t, i) => {
       const src = cdlg.word && i === 4 ? words : pool, count = (x) => src.filter((b) => b.topic === x).length;
-      return "<li><label><span>Question " + (i + 1) + "</span><select data-cslot='" + i + "'><option value=''>Random topic</option>" +
+      const inTopic = src.filter((b) => b.topic === t), sk = cdlg.skills[i];
+      return "<li><span id='cq" + i + "'>Question " + (i + 1) + "</span><select data-cslot='" + i + "' aria-labelledby='cq" + i + "'><option value=''>Random topic</option>" +
         TOPICS.map((x) => { const n = count(x); return "<option value='" + esc(x) + "'" + (x === t ? " selected" : "") + (n ? "" : " disabled") + ">" + esc(x) + " (" + n + ")</option>"; }).join("") +
-        "</select></label></li>";
+        "</select><select data-cskill='" + i + "' aria-label='Question " + (i + 1) + " skill'" + (t ? "" : " disabled") + "><option value=''>" + (t ? "Any skill" : "Pick a topic for skills") + "</option>" +
+        (t ? (SKILL_LIST[t] || []).map((x) => { const n = inTopic.filter((b) => b.skill === x).length; return "<option value='" + esc(x) + "'" + (x === sk ? " selected" : "") + (n ? "" : " disabled") + ">" + esc(x) + " (" + n + ")</option>"; }).join("") : "") +
+        "</select></li>";
     }).join("") + "<li class='cword'><label><input type='checkbox' data-cword" + (cdlg.word ? " checked" : "") + "> Make question 5 a word problem (with CUBES)</label></li>";
     $("customBuild").disabled = !cdlg.years.length;
   }
@@ -1761,6 +1770,7 @@
     const pool = bank(cdlg.years), words = wordsOnly(pool);
     cdlg.slots = cdlg.slots.map((t, i) => (t && (cdlg.word && i === 4 ? words : pool).some((b) => b.topic === t) ? t : null));
     cdlg.manual = cdlg.manual.map((m, k) => m && !!cdlg.slots[k]);
+    cdlg.skills = cdlg.skills.map((x, i) => (x && cdlg.slots[i] && (cdlg.word && i === 4 ? words : pool).some((b) => b.topic === cdlg.slots[i] && b.skill === x) ? x : null));
   }
   function bindCustom() {
     $("customYears").addEventListener("click", (e) => {
@@ -1774,11 +1784,12 @@
     });
     $("customSlots").addEventListener("change", (e) => {
       if (e.target.matches("[data-cword]")) { cdlg.word = e.target.checked; fitSlots(); renderCustom(); return; }
-      const s = e.target.closest("[data-cslot]"); if (s) { cdlg.slots[+s.dataset.cslot] = s.value || null; cdlg.manual[+s.dataset.cslot] = !!s.value; }
+      const k = e.target.closest("[data-cskill]"); if (k) { cdlg.skills[+k.dataset.cskill] = k.value || null; return; }
+      const s = e.target.closest("[data-cslot]"); if (s) { const i = +s.dataset.cslot; cdlg.slots[i] = s.value || null; cdlg.manual[i] = !!s.value; cdlg.skills[i] = null; renderCustom(); $("customSlots").querySelector("[data-cslot='" + i + "']").focus(); }
     });
-    $("customRoll").onclick = () => { cdlg.slots = resolveTopics(cdlg.slots.map((t, i) => (cdlg.manual[i] ? t : null)), bank(cdlg.years), cdlg.word); renderCustom(); };
+    $("customRoll").onclick = () => { cdlg.skills = cdlg.skills.map((x, i) => (cdlg.manual[i] ? x : null)); cdlg.slots = resolveTopics(cdlg.slots.map((t, i) => (cdlg.manual[i] ? t : null)), bank(cdlg.years), cdlg.word); renderCustom(); };
     $("customBuild").onclick = () => {
-      if (!buildCustom(cdlg.years, cdlg.slots.map((t, i) => (cdlg.manual[i] ? t : null)), cdlg.slots.slice(), cdlg.word)) { $("customMsg").textContent = "No questions match. Tick another year."; return; }
+      if (!buildCustom(cdlg.years, cdlg.slots.map((t, i) => (cdlg.manual[i] ? t : null)), cdlg.slots.slice(), cdlg.word, cdlg.skills.slice())) { $("customMsg").textContent = "No questions match. Tick another year."; return; }
       $("custom").hidden = true; render();
     };
     $("customClose").onclick = () => { $("custom").hidden = true; };
@@ -1791,8 +1802,8 @@
   function flash(msg) { const b = $("bCustomLink"); if (!b) return; b.textContent = msg; setTimeout(() => { if ($("bCustomLink")) $("bCustomLink").textContent = "Copy link"; }, 1600); }
   // Swap one question for another from the same topic.
   function swapSpot() {
-    const it = state.mixed[state.spot], nu = drawQuestion(bank(state.custom.years), it.topic, state.mixed.map((x) => x.key), it.word);
-    if (!nu) { $("sSwap").textContent = "No other " + it.topic.toLowerCase() + (it.word ? " word problems" : " questions"); return; }
+    const it = state.mixed[state.spot], nu = drawQuestion(bank(state.custom.years), it.topic, state.mixed.map((x) => x.key), it.word, it.skill);
+    if (!nu) { $("sSwap").textContent = "No other " + (it.skill || it.topic).toLowerCase() + (it.word ? " word problems" : " questions"); return; }
     state.mixed[state.spot] = nu; syncHash(); renderSpot();
   }
 
@@ -1864,7 +1875,7 @@
     if ((b = t.closest("[data-day]"))) { state.day = +b.dataset.day; state.mixed = state.custom = null; render(); return; }
     if (t.closest("#bMix")) { state.custom = null; state.mixed = buildMix(); render(); return; }
     if (t.closest("#bCustom")) { openCustom(); return; }
-    if (t.closest("#bCustomNew")) { buildCustom(state.custom.years, state.custom.slots, state.mixed.map((it) => it.topic), state.custom.word); render(); return; }
+    if (t.closest("#bCustomNew")) { buildCustom(state.custom.years, state.custom.slots, state.mixed.map((it) => it.topic), state.custom.word, state.mixed.map((it) => it.skill)); render(); return; }
     if (t.closest("#bCustomLink")) { copyLink(); return; }
     if (t.closest("#sSwap")) { swapSpot(); return; }
     if (t.closest("#bClear")) { items().forEach((it) => done.delete(it.key)); saveDone(); render(); return; }
