@@ -260,7 +260,7 @@
   function jFmtStep(p, n) { if (p.time) return n >= 60 && n % 60 === 0 ? n / 60 + " h" : n + " min"; if (p.money) return "$" + (n % 1 ? n.toFixed(2) : n); return fmtN(n); }
   const angleKey = (d) => (d === 90 ? "right" : d < 90 ? "less" : "greater");
   // Stage 3 names: acute, right, obtuse, straight, reflex (a revolution at 360°).
-  const angleName = (d) => (Math.abs(d - 90) < 0.5 ? "right" : d < 90 ? "acute" : Math.abs(d - 180) < 0.5 ? "straight" : d < 180 ? "obtuse" : d >= 359.5 ? "revolution" : "reflex");
+  const angleName = (d) => (d < 0.5 ? "zero" : Math.abs(d - 90) < 0.5 ? "right" : d < 90 ? "acute" : Math.abs(d - 180) < 0.5 ? "straight" : d < 180 ? "obtuse" : d >= 359.5 ? "revolution" : "reflex");
   const angleWord = (d) => (d === 90 ? "A right angle" : d >= 179 ? "A straight angle — greater than a right angle" : d < 90 ? "Less than a right angle" : "Greater than a right angle");
 
   // ---------- interactive parts ----------
@@ -1257,12 +1257,13 @@
         svg.setAttribute("viewBox", "0 0 340 " + (p.reflex ? 250 : 200));
         fixed.setAttribute("x1", vx); fixed.setAttribute("y1", vy); fixed.setAttribute("x2", vx + L); fixed.setAttribute("y2", vy); arm.setAttribute("x1", vx); arm.setAttribute("y1", vy); svg.querySelector(".ang-v").setAttribute("cx", vx); svg.querySelector(".ang-v").setAttribute("cy", vy);
         const set = (deg) => {
-          deg = Math.max(5, Math.min(p.reflex ? 360 : 180, deg)); for (const snap of [90, 180, 270, 360]) if (Math.abs(deg - snap) < 4) deg = snap;
+          deg = Math.max(0, Math.min(p.reflex ? 360 : 180, deg)); for (const snap of [0, 90, 180, 270, 360]) if (Math.abs(deg - snap) < 4) deg = snap;
           el._deg = deg; const r = (deg * Math.PI) / 180, x = vx + L * Math.cos(r), y = vy - L * Math.sin(r);
           arm.setAttribute("x2", x); arm.setAttribute("y2", y); h.setAttribute("cx", x); h.setAttribute("cy", y);
           const R = 40, ax = vx + R * Math.cos(r), ay = vy - R * Math.sin(r);
-          arc.setAttribute("d", deg === 90 ? "" : deg >= 360 ? "M " + (vx + R) + " " + vy + " A " + R + " " + R + " 0 1 0 " + (vx - R) + " " + vy + " A " + R + " " + R + " 0 1 0 " + (vx + R) + " " + vy : "M " + (vx + R) + " " + vy + " A " + R + " " + R + " 0 " + (deg > 180 ? 1 : 0) + " 0 " + ax + " " + ay);
+          arc.setAttribute("d", deg === 90 || deg === 0 ? "" : deg >= 360 ? "M " + (vx + R) + " " + vy + " A " + R + " " + R + " 0 1 0 " + (vx - R) + " " + vy + " A " + R + " " + R + " 0 1 0 " + (vx + R) + " " + vy : "M " + (vx + R) + " " + vy + " A " + R + " " + R + " 0 " + (deg > 180 ? 1 : 0) + " 0 " + ax + " " + ay);
           sq.setAttribute("d", deg === 90 ? "M " + (vx + 22) + " " + vy + " L " + (vx + 22) + " " + (vy - 22) + " L " + vx + " " + (vy - 22) : "");
+          if (deg === 0) { el.querySelector("[data-angread]").textContent = "The arms are closed" + (p.degrees ? ": 0°" : "") + "."; return; }
           if (p.names) { const n = angleName(deg); el.querySelector("[data-angread]").textContent = "This is " + (/^[aeiou]/.test(n) ? "an " : "a ") + n + " angle" + (p.degrees ? " (" + Math.round(deg) + "°)" : "") + "."; return; }
           el.querySelector("[data-angread]").textContent = "This angle is " + angleWord(deg).replace(/^A /, "a ").replace(/^L/, "l").replace(/^G/, "g") + (p.degrees ? " (" + Math.round(deg) + "°)" : "") + ".";
         };
@@ -1270,7 +1271,13 @@
         const pt = (e) => { const r = svg.getBoundingClientRect(), sx = 340 / r.width; return [(e.clientX - r.left) * sx, (e.clientY - r.top) * sx]; };
         svg.addEventListener("pointerdown", (e) => {
           e.preventDefault(); svg.setPointerCapture(e.pointerId);
-          const mv = (ev) => { const [x, y] = pt(ev); let d = (Math.atan2(vy - y, x - vx) * 180) / Math.PI; if (p.reflex && d < 0) d += 360; if (p.reflex && el._deg > 300 && d < 60) d = 360; else if (!p.reflex && d < -90) d = 180; set(d); };
+          // The arm follows the drag continuously, so closing it reads 0° and opening it all the way round reads 360°.
+          const mv = (ev) => {
+            const [x, y] = pt(ev); let d = (Math.atan2(vy - y, x - vx) * 180) / Math.PI;
+            if (p.reflex) d = el._deg + ((((d - el._deg) % 360) + 540) % 360) - 180;
+            else if (d < -90) d = 180; else if (d < 0) d = 0;
+            set(d);
+          };
           mv(e);
           const up = () => { svg.removeEventListener("pointermove", mv); svg.removeEventListener("pointerup", up); };
           svg.addEventListener("pointermove", mv); svg.addEventListener("pointerup", up);
